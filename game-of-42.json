@@ -1,0 +1,1419 @@
+{
+  "name": "Game of 42",
+  "version": "0.1.0",
+  "lockedDecisions": {
+    "D1_lattice_binding": "axis x faculty product (42 = 6 axes x 7 faculty stations); roots = stratum-1 basis vectors; constructive cone 1+6+15+20=42 retained as numerical echo (~0.55 confidence)",
+    "D2_heptad_shape": "seven barycentric stations (Shape B)",
+    "D3_fractal_depth": "fractal-ready, ship one level; centre station holds the seed",
+    "D4_fill_order": "vision fish, then mice, then guide; heptads fillable in parallel",
+    "D5_floating_shape": "star tetrahedron iterating toward 64-tetrahedron grid, overlaid on soulbis star",
+    "D6_completion": "sealed game = one trust-graph node and one governance quorum unit",
+    "D7_compression": "one VRC edge per slot, kappa-label compressed; 42 labels + folded geometry -> group seal"
+  },
+  "axisSpace": {
+    "lattice": "{0,1}^6 (Z/(2^6)Z)",
+    "roots": "stratum-1 (C(6,1)=6)",
+    "axes": [
+      {
+        "id": "compute",
+        "axis": "intelligence / learning",
+        "latticeBit": 1,
+        "zkDimension": "learning",
+        "colour": "#7C5CFF",
+        "agent": null,
+        "latticeAxisVertex": 2
+      },
+      {
+        "id": "connection",
+        "axis": "network",
+        "latticeBit": 2,
+        "zkDimension": "connection",
+        "colour": "#14B8A6",
+        "agent": null,
+        "latticeAxisVertex": 4
+      },
+      {
+        "id": "delegation",
+        "axis": "agency",
+        "latticeBit": 4,
+        "zkDimension": "agency",
+        "colour": "#2563EB",
+        "agent": "Soulbae 🧙",
+        "latticeAxisVertex": 16
+      },
+      {
+        "id": "protection",
+        "axis": "boundary",
+        "latticeBit": 5,
+        "zkDimension": "privacy",
+        "colour": "#E0A526",
+        "agent": "Soulbis ⚔️",
+        "latticeAxisVertex": 32
+      },
+      {
+        "id": "memory",
+        "axis": "continuity",
+        "latticeBit": 3,
+        "zkDimension": "continuity",
+        "colour": "#E0568A",
+        "agent": null,
+        "latticeAxisVertex": 8
+      },
+      {
+        "id": "value",
+        "axis": "capital / compliance",
+        "latticeBit": 0,
+        "zkDimension": "compliance",
+        "colour": "#2FB67C",
+        "agent": null,
+        "latticeAxisVertex": 1
+      }
+    ]
+  },
+  "facultySpace": {
+    "cube": "{head,heart,hands}",
+    "stations": "7 non-empty subsets",
+    "bitMap": {
+      "head": 1,
+      "heart": 2,
+      "hands": 4
+    }
+  },
+  "stationTable": [
+    {
+      "faculty": 1,
+      "subset": [
+        "head"
+      ],
+      "personaClass": "vision_fish",
+      "role": "lead advisor"
+    },
+    {
+      "faculty": 3,
+      "subset": [
+        "head",
+        "heart"
+      ],
+      "personaClass": "vision_fish",
+      "role": "visionary advisor"
+    },
+    {
+      "faculty": 5,
+      "subset": [
+        "head",
+        "hands"
+      ],
+      "personaClass": "vision_fish",
+      "role": "strategist maker"
+    },
+    {
+      "faculty": 4,
+      "subset": [
+        "hands"
+      ],
+      "personaClass": "mouse",
+      "role": "lead builder"
+    },
+    {
+      "faculty": 6,
+      "subset": [
+        "heart",
+        "hands"
+      ],
+      "personaClass": "mouse",
+      "role": "caring builder"
+    },
+    {
+      "faculty": 2,
+      "subset": [
+        "heart"
+      ],
+      "personaClass": "mouse",
+      "role": "steward builder"
+    },
+    {
+      "faculty": 7,
+      "subset": [
+        "head",
+        "heart",
+        "hands"
+      ],
+      "personaClass": "privacy_guide",
+      "role": "keystone guide"
+    }
+  ],
+  "personaTemplates": {
+    "vision_fish": [
+      "topologist",
+      "architect",
+      "cartographer"
+    ],
+    "mouse": [
+      "forgemaster",
+      "cipher",
+      "algebraist"
+    ],
+    "privacy_guide": [
+      "soulbis",
+      "soulbae",
+      "netkeeper"
+    ]
+  },
+  "geometry": {
+    "R_board": 300,
+    "R_local": 90,
+    "heptadAngleDeg": "60*r",
+    "headApexPointsRadiallyOut": true
+  },
+  "collapseRule": "board seals only when all six heptads lock; any heptad incomplete -> board cannot seal (multiplicative collapse)",
+  "slots": [
+    {
+      "slotId": "compute.head",
+      "axisId": "compute",
+      "stationIndex": 0,
+      "faculty": [
+        "head"
+      ],
+      "facultyCubeVertex": 1,
+      "personaClass": "vision_fish",
+      "role": "lead advisor",
+      "personaTemplate": "architect",
+      "isKeystone": false,
+      "fractalSeed": false,
+      "latticeAxisVertex": 2,
+      "barycentric": [
+        1,
+        0,
+        0
+      ],
+      "position2D": {
+        "x": 390,
+        "y": 0
+      },
+      "heptadCentroid": {
+        "x": 300,
+        "y": 0
+      },
+      "fillOrder": 1
+    },
+    {
+      "slotId": "compute.head-heart",
+      "axisId": "compute",
+      "stationIndex": 1,
+      "faculty": [
+        "head",
+        "heart"
+      ],
+      "facultyCubeVertex": 3,
+      "personaClass": "vision_fish",
+      "role": "visionary advisor",
+      "personaTemplate": "cartographer",
+      "isKeystone": false,
+      "fractalSeed": false,
+      "latticeAxisVertex": 2,
+      "barycentric": [
+        0.5,
+        0.5,
+        0
+      ],
+      "position2D": {
+        "x": 322.5,
+        "y": 38.971
+      },
+      "heptadCentroid": {
+        "x": 300,
+        "y": 0
+      },
+      "fillOrder": 2
+    },
+    {
+      "slotId": "compute.head-hands",
+      "axisId": "compute",
+      "stationIndex": 2,
+      "faculty": [
+        "head",
+        "hands"
+      ],
+      "facultyCubeVertex": 5,
+      "personaClass": "vision_fish",
+      "role": "strategist maker",
+      "personaTemplate": "topologist",
+      "isKeystone": false,
+      "fractalSeed": false,
+      "latticeAxisVertex": 2,
+      "barycentric": [
+        0.5,
+        0,
+        0.5
+      ],
+      "position2D": {
+        "x": 322.5,
+        "y": -38.971
+      },
+      "heptadCentroid": {
+        "x": 300,
+        "y": 0
+      },
+      "fillOrder": 3
+    },
+    {
+      "slotId": "compute.hands",
+      "axisId": "compute",
+      "stationIndex": 3,
+      "faculty": [
+        "hands"
+      ],
+      "facultyCubeVertex": 4,
+      "personaClass": "mouse",
+      "role": "lead builder",
+      "personaTemplate": "cipher",
+      "isKeystone": false,
+      "fractalSeed": false,
+      "latticeAxisVertex": 2,
+      "barycentric": [
+        0,
+        0,
+        1
+      ],
+      "position2D": {
+        "x": 255,
+        "y": -77.942
+      },
+      "heptadCentroid": {
+        "x": 300,
+        "y": 0
+      },
+      "fillOrder": 4
+    },
+    {
+      "slotId": "compute.heart-hands",
+      "axisId": "compute",
+      "stationIndex": 4,
+      "faculty": [
+        "heart",
+        "hands"
+      ],
+      "facultyCubeVertex": 6,
+      "personaClass": "mouse",
+      "role": "caring builder",
+      "personaTemplate": "algebraist",
+      "isKeystone": false,
+      "fractalSeed": false,
+      "latticeAxisVertex": 2,
+      "barycentric": [
+        0,
+        0.5,
+        0.5
+      ],
+      "position2D": {
+        "x": 255,
+        "y": 0
+      },
+      "heptadCentroid": {
+        "x": 300,
+        "y": 0
+      },
+      "fillOrder": 5
+    },
+    {
+      "slotId": "compute.heart",
+      "axisId": "compute",
+      "stationIndex": 5,
+      "faculty": [
+        "heart"
+      ],
+      "facultyCubeVertex": 2,
+      "personaClass": "mouse",
+      "role": "steward builder",
+      "personaTemplate": "forgemaster",
+      "isKeystone": false,
+      "fractalSeed": false,
+      "latticeAxisVertex": 2,
+      "barycentric": [
+        0,
+        1,
+        0
+      ],
+      "position2D": {
+        "x": 255,
+        "y": 77.942
+      },
+      "heptadCentroid": {
+        "x": 300,
+        "y": 0
+      },
+      "fillOrder": 6
+    },
+    {
+      "slotId": "compute.head-heart-hands",
+      "axisId": "compute",
+      "stationIndex": 6,
+      "faculty": [
+        "head",
+        "heart",
+        "hands"
+      ],
+      "facultyCubeVertex": 7,
+      "personaClass": "privacy_guide",
+      "role": "keystone guide",
+      "personaTemplate": "soulbae",
+      "isKeystone": true,
+      "fractalSeed": true,
+      "latticeAxisVertex": 2,
+      "barycentric": [
+        0.3333,
+        0.3333,
+        0.3333
+      ],
+      "position2D": {
+        "x": 300,
+        "y": 0
+      },
+      "heptadCentroid": {
+        "x": 300,
+        "y": 0
+      },
+      "fillOrder": 7
+    },
+    {
+      "slotId": "connection.head",
+      "axisId": "connection",
+      "stationIndex": 0,
+      "faculty": [
+        "head"
+      ],
+      "facultyCubeVertex": 1,
+      "personaClass": "vision_fish",
+      "role": "lead advisor",
+      "personaTemplate": "architect",
+      "isKeystone": false,
+      "fractalSeed": false,
+      "latticeAxisVertex": 4,
+      "barycentric": [
+        1,
+        0,
+        0
+      ],
+      "position2D": {
+        "x": 195,
+        "y": 337.75
+      },
+      "heptadCentroid": {
+        "x": 150,
+        "y": 259.808
+      },
+      "fillOrder": 1
+    },
+    {
+      "slotId": "connection.head-heart",
+      "axisId": "connection",
+      "stationIndex": 1,
+      "faculty": [
+        "head",
+        "heart"
+      ],
+      "facultyCubeVertex": 3,
+      "personaClass": "vision_fish",
+      "role": "visionary advisor",
+      "personaTemplate": "cartographer",
+      "isKeystone": false,
+      "fractalSeed": false,
+      "latticeAxisVertex": 4,
+      "barycentric": [
+        0.5,
+        0.5,
+        0
+      ],
+      "position2D": {
+        "x": 127.5,
+        "y": 298.779
+      },
+      "heptadCentroid": {
+        "x": 150,
+        "y": 259.808
+      },
+      "fillOrder": 2
+    },
+    {
+      "slotId": "connection.head-hands",
+      "axisId": "connection",
+      "stationIndex": 2,
+      "faculty": [
+        "head",
+        "hands"
+      ],
+      "facultyCubeVertex": 5,
+      "personaClass": "vision_fish",
+      "role": "strategist maker",
+      "personaTemplate": "topologist",
+      "isKeystone": false,
+      "fractalSeed": false,
+      "latticeAxisVertex": 4,
+      "barycentric": [
+        0.5,
+        0,
+        0.5
+      ],
+      "position2D": {
+        "x": 195,
+        "y": 259.808
+      },
+      "heptadCentroid": {
+        "x": 150,
+        "y": 259.808
+      },
+      "fillOrder": 3
+    },
+    {
+      "slotId": "connection.hands",
+      "axisId": "connection",
+      "stationIndex": 3,
+      "faculty": [
+        "hands"
+      ],
+      "facultyCubeVertex": 4,
+      "personaClass": "mouse",
+      "role": "lead builder",
+      "personaTemplate": "cipher",
+      "isKeystone": false,
+      "fractalSeed": false,
+      "latticeAxisVertex": 4,
+      "barycentric": [
+        0,
+        0,
+        1
+      ],
+      "position2D": {
+        "x": 195,
+        "y": 181.865
+      },
+      "heptadCentroid": {
+        "x": 150,
+        "y": 259.808
+      },
+      "fillOrder": 4
+    },
+    {
+      "slotId": "connection.heart-hands",
+      "axisId": "connection",
+      "stationIndex": 4,
+      "faculty": [
+        "heart",
+        "hands"
+      ],
+      "facultyCubeVertex": 6,
+      "personaClass": "mouse",
+      "role": "caring builder",
+      "personaTemplate": "algebraist",
+      "isKeystone": false,
+      "fractalSeed": false,
+      "latticeAxisVertex": 4,
+      "barycentric": [
+        0,
+        0.5,
+        0.5
+      ],
+      "position2D": {
+        "x": 127.5,
+        "y": 220.836
+      },
+      "heptadCentroid": {
+        "x": 150,
+        "y": 259.808
+      },
+      "fillOrder": 5
+    },
+    {
+      "slotId": "connection.heart",
+      "axisId": "connection",
+      "stationIndex": 5,
+      "faculty": [
+        "heart"
+      ],
+      "facultyCubeVertex": 2,
+      "personaClass": "mouse",
+      "role": "steward builder",
+      "personaTemplate": "forgemaster",
+      "isKeystone": false,
+      "fractalSeed": false,
+      "latticeAxisVertex": 4,
+      "barycentric": [
+        0,
+        1,
+        0
+      ],
+      "position2D": {
+        "x": 60,
+        "y": 259.808
+      },
+      "heptadCentroid": {
+        "x": 150,
+        "y": 259.808
+      },
+      "fillOrder": 6
+    },
+    {
+      "slotId": "connection.head-heart-hands",
+      "axisId": "connection",
+      "stationIndex": 6,
+      "faculty": [
+        "head",
+        "heart",
+        "hands"
+      ],
+      "facultyCubeVertex": 7,
+      "personaClass": "privacy_guide",
+      "role": "keystone guide",
+      "personaTemplate": "soulbae",
+      "isKeystone": true,
+      "fractalSeed": true,
+      "latticeAxisVertex": 4,
+      "barycentric": [
+        0.3333,
+        0.3333,
+        0.3333
+      ],
+      "position2D": {
+        "x": 150,
+        "y": 259.808
+      },
+      "heptadCentroid": {
+        "x": 150,
+        "y": 259.808
+      },
+      "fillOrder": 7
+    },
+    {
+      "slotId": "delegation.head",
+      "axisId": "delegation",
+      "stationIndex": 0,
+      "faculty": [
+        "head"
+      ],
+      "facultyCubeVertex": 1,
+      "personaClass": "vision_fish",
+      "role": "lead advisor",
+      "personaTemplate": "architect",
+      "isKeystone": false,
+      "fractalSeed": false,
+      "latticeAxisVertex": 16,
+      "barycentric": [
+        1,
+        0,
+        0
+      ],
+      "position2D": {
+        "x": -195,
+        "y": 337.75
+      },
+      "heptadCentroid": {
+        "x": -150,
+        "y": 259.808
+      },
+      "fillOrder": 1
+    },
+    {
+      "slotId": "delegation.head-heart",
+      "axisId": "delegation",
+      "stationIndex": 1,
+      "faculty": [
+        "head",
+        "heart"
+      ],
+      "facultyCubeVertex": 3,
+      "personaClass": "vision_fish",
+      "role": "visionary advisor",
+      "personaTemplate": "cartographer",
+      "isKeystone": false,
+      "fractalSeed": false,
+      "latticeAxisVertex": 16,
+      "barycentric": [
+        0.5,
+        0.5,
+        0
+      ],
+      "position2D": {
+        "x": -195,
+        "y": 259.808
+      },
+      "heptadCentroid": {
+        "x": -150,
+        "y": 259.808
+      },
+      "fillOrder": 2
+    },
+    {
+      "slotId": "delegation.head-hands",
+      "axisId": "delegation",
+      "stationIndex": 2,
+      "faculty": [
+        "head",
+        "hands"
+      ],
+      "facultyCubeVertex": 5,
+      "personaClass": "vision_fish",
+      "role": "strategist maker",
+      "personaTemplate": "topologist",
+      "isKeystone": false,
+      "fractalSeed": false,
+      "latticeAxisVertex": 16,
+      "barycentric": [
+        0.5,
+        0,
+        0.5
+      ],
+      "position2D": {
+        "x": -127.5,
+        "y": 298.779
+      },
+      "heptadCentroid": {
+        "x": -150,
+        "y": 259.808
+      },
+      "fillOrder": 3
+    },
+    {
+      "slotId": "delegation.hands",
+      "axisId": "delegation",
+      "stationIndex": 3,
+      "faculty": [
+        "hands"
+      ],
+      "facultyCubeVertex": 4,
+      "personaClass": "mouse",
+      "role": "lead builder",
+      "personaTemplate": "cipher",
+      "isKeystone": false,
+      "fractalSeed": false,
+      "latticeAxisVertex": 16,
+      "barycentric": [
+        0,
+        0,
+        1
+      ],
+      "position2D": {
+        "x": -60,
+        "y": 259.808
+      },
+      "heptadCentroid": {
+        "x": -150,
+        "y": 259.808
+      },
+      "fillOrder": 4
+    },
+    {
+      "slotId": "delegation.heart-hands",
+      "axisId": "delegation",
+      "stationIndex": 4,
+      "faculty": [
+        "heart",
+        "hands"
+      ],
+      "facultyCubeVertex": 6,
+      "personaClass": "mouse",
+      "role": "caring builder",
+      "personaTemplate": "algebraist",
+      "isKeystone": false,
+      "fractalSeed": false,
+      "latticeAxisVertex": 16,
+      "barycentric": [
+        0,
+        0.5,
+        0.5
+      ],
+      "position2D": {
+        "x": -127.5,
+        "y": 220.836
+      },
+      "heptadCentroid": {
+        "x": -150,
+        "y": 259.808
+      },
+      "fillOrder": 5
+    },
+    {
+      "slotId": "delegation.heart",
+      "axisId": "delegation",
+      "stationIndex": 5,
+      "faculty": [
+        "heart"
+      ],
+      "facultyCubeVertex": 2,
+      "personaClass": "mouse",
+      "role": "steward builder",
+      "personaTemplate": "forgemaster",
+      "isKeystone": false,
+      "fractalSeed": false,
+      "latticeAxisVertex": 16,
+      "barycentric": [
+        0,
+        1,
+        0
+      ],
+      "position2D": {
+        "x": -195,
+        "y": 181.865
+      },
+      "heptadCentroid": {
+        "x": -150,
+        "y": 259.808
+      },
+      "fillOrder": 6
+    },
+    {
+      "slotId": "delegation.head-heart-hands",
+      "axisId": "delegation",
+      "stationIndex": 6,
+      "faculty": [
+        "head",
+        "heart",
+        "hands"
+      ],
+      "facultyCubeVertex": 7,
+      "personaClass": "privacy_guide",
+      "role": "keystone guide",
+      "personaTemplate": "soulbae",
+      "isKeystone": true,
+      "fractalSeed": true,
+      "latticeAxisVertex": 16,
+      "barycentric": [
+        0.3333,
+        0.3333,
+        0.3333
+      ],
+      "position2D": {
+        "x": -150,
+        "y": 259.808
+      },
+      "heptadCentroid": {
+        "x": -150,
+        "y": 259.808
+      },
+      "fillOrder": 7
+    },
+    {
+      "slotId": "protection.head",
+      "axisId": "protection",
+      "stationIndex": 0,
+      "faculty": [
+        "head"
+      ],
+      "facultyCubeVertex": 1,
+      "personaClass": "vision_fish",
+      "role": "lead advisor",
+      "personaTemplate": "architect",
+      "isKeystone": false,
+      "fractalSeed": false,
+      "latticeAxisVertex": 32,
+      "barycentric": [
+        1,
+        0,
+        0
+      ],
+      "position2D": {
+        "x": -390,
+        "y": 0
+      },
+      "heptadCentroid": {
+        "x": -300,
+        "y": 0
+      },
+      "fillOrder": 1
+    },
+    {
+      "slotId": "protection.head-heart",
+      "axisId": "protection",
+      "stationIndex": 1,
+      "faculty": [
+        "head",
+        "heart"
+      ],
+      "facultyCubeVertex": 3,
+      "personaClass": "vision_fish",
+      "role": "visionary advisor",
+      "personaTemplate": "cartographer",
+      "isKeystone": false,
+      "fractalSeed": false,
+      "latticeAxisVertex": 32,
+      "barycentric": [
+        0.5,
+        0.5,
+        0
+      ],
+      "position2D": {
+        "x": -322.5,
+        "y": -38.971
+      },
+      "heptadCentroid": {
+        "x": -300,
+        "y": 0
+      },
+      "fillOrder": 2
+    },
+    {
+      "slotId": "protection.head-hands",
+      "axisId": "protection",
+      "stationIndex": 2,
+      "faculty": [
+        "head",
+        "hands"
+      ],
+      "facultyCubeVertex": 5,
+      "personaClass": "vision_fish",
+      "role": "strategist maker",
+      "personaTemplate": "topologist",
+      "isKeystone": false,
+      "fractalSeed": false,
+      "latticeAxisVertex": 32,
+      "barycentric": [
+        0.5,
+        0,
+        0.5
+      ],
+      "position2D": {
+        "x": -322.5,
+        "y": 38.971
+      },
+      "heptadCentroid": {
+        "x": -300,
+        "y": 0
+      },
+      "fillOrder": 3
+    },
+    {
+      "slotId": "protection.hands",
+      "axisId": "protection",
+      "stationIndex": 3,
+      "faculty": [
+        "hands"
+      ],
+      "facultyCubeVertex": 4,
+      "personaClass": "mouse",
+      "role": "lead builder",
+      "personaTemplate": "cipher",
+      "isKeystone": false,
+      "fractalSeed": false,
+      "latticeAxisVertex": 32,
+      "barycentric": [
+        0,
+        0,
+        1
+      ],
+      "position2D": {
+        "x": -255,
+        "y": 77.942
+      },
+      "heptadCentroid": {
+        "x": -300,
+        "y": 0
+      },
+      "fillOrder": 4
+    },
+    {
+      "slotId": "protection.heart-hands",
+      "axisId": "protection",
+      "stationIndex": 4,
+      "faculty": [
+        "heart",
+        "hands"
+      ],
+      "facultyCubeVertex": 6,
+      "personaClass": "mouse",
+      "role": "caring builder",
+      "personaTemplate": "algebraist",
+      "isKeystone": false,
+      "fractalSeed": false,
+      "latticeAxisVertex": 32,
+      "barycentric": [
+        0,
+        0.5,
+        0.5
+      ],
+      "position2D": {
+        "x": -255,
+        "y": 0
+      },
+      "heptadCentroid": {
+        "x": -300,
+        "y": 0
+      },
+      "fillOrder": 5
+    },
+    {
+      "slotId": "protection.heart",
+      "axisId": "protection",
+      "stationIndex": 5,
+      "faculty": [
+        "heart"
+      ],
+      "facultyCubeVertex": 2,
+      "personaClass": "mouse",
+      "role": "steward builder",
+      "personaTemplate": "forgemaster",
+      "isKeystone": false,
+      "fractalSeed": false,
+      "latticeAxisVertex": 32,
+      "barycentric": [
+        0,
+        1,
+        0
+      ],
+      "position2D": {
+        "x": -255,
+        "y": -77.942
+      },
+      "heptadCentroid": {
+        "x": -300,
+        "y": 0
+      },
+      "fillOrder": 6
+    },
+    {
+      "slotId": "protection.head-heart-hands",
+      "axisId": "protection",
+      "stationIndex": 6,
+      "faculty": [
+        "head",
+        "heart",
+        "hands"
+      ],
+      "facultyCubeVertex": 7,
+      "personaClass": "privacy_guide",
+      "role": "keystone guide",
+      "personaTemplate": "soulbae",
+      "isKeystone": true,
+      "fractalSeed": true,
+      "latticeAxisVertex": 32,
+      "barycentric": [
+        0.3333,
+        0.3333,
+        0.3333
+      ],
+      "position2D": {
+        "x": -300,
+        "y": 0
+      },
+      "heptadCentroid": {
+        "x": -300,
+        "y": 0
+      },
+      "fillOrder": 7
+    },
+    {
+      "slotId": "memory.head",
+      "axisId": "memory",
+      "stationIndex": 0,
+      "faculty": [
+        "head"
+      ],
+      "facultyCubeVertex": 1,
+      "personaClass": "vision_fish",
+      "role": "lead advisor",
+      "personaTemplate": "architect",
+      "isKeystone": false,
+      "fractalSeed": false,
+      "latticeAxisVertex": 8,
+      "barycentric": [
+        1,
+        0,
+        0
+      ],
+      "position2D": {
+        "x": -195,
+        "y": -337.75
+      },
+      "heptadCentroid": {
+        "x": -150,
+        "y": -259.808
+      },
+      "fillOrder": 1
+    },
+    {
+      "slotId": "memory.head-heart",
+      "axisId": "memory",
+      "stationIndex": 1,
+      "faculty": [
+        "head",
+        "heart"
+      ],
+      "facultyCubeVertex": 3,
+      "personaClass": "vision_fish",
+      "role": "visionary advisor",
+      "personaTemplate": "cartographer",
+      "isKeystone": false,
+      "fractalSeed": false,
+      "latticeAxisVertex": 8,
+      "barycentric": [
+        0.5,
+        0.5,
+        0
+      ],
+      "position2D": {
+        "x": -127.5,
+        "y": -298.779
+      },
+      "heptadCentroid": {
+        "x": -150,
+        "y": -259.808
+      },
+      "fillOrder": 2
+    },
+    {
+      "slotId": "memory.head-hands",
+      "axisId": "memory",
+      "stationIndex": 2,
+      "faculty": [
+        "head",
+        "hands"
+      ],
+      "facultyCubeVertex": 5,
+      "personaClass": "vision_fish",
+      "role": "strategist maker",
+      "personaTemplate": "topologist",
+      "isKeystone": false,
+      "fractalSeed": false,
+      "latticeAxisVertex": 8,
+      "barycentric": [
+        0.5,
+        0,
+        0.5
+      ],
+      "position2D": {
+        "x": -195,
+        "y": -259.808
+      },
+      "heptadCentroid": {
+        "x": -150,
+        "y": -259.808
+      },
+      "fillOrder": 3
+    },
+    {
+      "slotId": "memory.hands",
+      "axisId": "memory",
+      "stationIndex": 3,
+      "faculty": [
+        "hands"
+      ],
+      "facultyCubeVertex": 4,
+      "personaClass": "mouse",
+      "role": "lead builder",
+      "personaTemplate": "cipher",
+      "isKeystone": false,
+      "fractalSeed": false,
+      "latticeAxisVertex": 8,
+      "barycentric": [
+        0,
+        0,
+        1
+      ],
+      "position2D": {
+        "x": -195,
+        "y": -181.865
+      },
+      "heptadCentroid": {
+        "x": -150,
+        "y": -259.808
+      },
+      "fillOrder": 4
+    },
+    {
+      "slotId": "memory.heart-hands",
+      "axisId": "memory",
+      "stationIndex": 4,
+      "faculty": [
+        "heart",
+        "hands"
+      ],
+      "facultyCubeVertex": 6,
+      "personaClass": "mouse",
+      "role": "caring builder",
+      "personaTemplate": "algebraist",
+      "isKeystone": false,
+      "fractalSeed": false,
+      "latticeAxisVertex": 8,
+      "barycentric": [
+        0,
+        0.5,
+        0.5
+      ],
+      "position2D": {
+        "x": -127.5,
+        "y": -220.836
+      },
+      "heptadCentroid": {
+        "x": -150,
+        "y": -259.808
+      },
+      "fillOrder": 5
+    },
+    {
+      "slotId": "memory.heart",
+      "axisId": "memory",
+      "stationIndex": 5,
+      "faculty": [
+        "heart"
+      ],
+      "facultyCubeVertex": 2,
+      "personaClass": "mouse",
+      "role": "steward builder",
+      "personaTemplate": "forgemaster",
+      "isKeystone": false,
+      "fractalSeed": false,
+      "latticeAxisVertex": 8,
+      "barycentric": [
+        0,
+        1,
+        0
+      ],
+      "position2D": {
+        "x": -60,
+        "y": -259.808
+      },
+      "heptadCentroid": {
+        "x": -150,
+        "y": -259.808
+      },
+      "fillOrder": 6
+    },
+    {
+      "slotId": "memory.head-heart-hands",
+      "axisId": "memory",
+      "stationIndex": 6,
+      "faculty": [
+        "head",
+        "heart",
+        "hands"
+      ],
+      "facultyCubeVertex": 7,
+      "personaClass": "privacy_guide",
+      "role": "keystone guide",
+      "personaTemplate": "soulbae",
+      "isKeystone": true,
+      "fractalSeed": true,
+      "latticeAxisVertex": 8,
+      "barycentric": [
+        0.3333,
+        0.3333,
+        0.3333
+      ],
+      "position2D": {
+        "x": -150,
+        "y": -259.808
+      },
+      "heptadCentroid": {
+        "x": -150,
+        "y": -259.808
+      },
+      "fillOrder": 7
+    },
+    {
+      "slotId": "value.head",
+      "axisId": "value",
+      "stationIndex": 0,
+      "faculty": [
+        "head"
+      ],
+      "facultyCubeVertex": 1,
+      "personaClass": "vision_fish",
+      "role": "lead advisor",
+      "personaTemplate": "architect",
+      "isKeystone": false,
+      "fractalSeed": false,
+      "latticeAxisVertex": 1,
+      "barycentric": [
+        1,
+        0,
+        0
+      ],
+      "position2D": {
+        "x": 195,
+        "y": -337.75
+      },
+      "heptadCentroid": {
+        "x": 150,
+        "y": -259.808
+      },
+      "fillOrder": 1
+    },
+    {
+      "slotId": "value.head-heart",
+      "axisId": "value",
+      "stationIndex": 1,
+      "faculty": [
+        "head",
+        "heart"
+      ],
+      "facultyCubeVertex": 3,
+      "personaClass": "vision_fish",
+      "role": "visionary advisor",
+      "personaTemplate": "cartographer",
+      "isKeystone": false,
+      "fractalSeed": false,
+      "latticeAxisVertex": 1,
+      "barycentric": [
+        0.5,
+        0.5,
+        0
+      ],
+      "position2D": {
+        "x": 195,
+        "y": -259.808
+      },
+      "heptadCentroid": {
+        "x": 150,
+        "y": -259.808
+      },
+      "fillOrder": 2
+    },
+    {
+      "slotId": "value.head-hands",
+      "axisId": "value",
+      "stationIndex": 2,
+      "faculty": [
+        "head",
+        "hands"
+      ],
+      "facultyCubeVertex": 5,
+      "personaClass": "vision_fish",
+      "role": "strategist maker",
+      "personaTemplate": "topologist",
+      "isKeystone": false,
+      "fractalSeed": false,
+      "latticeAxisVertex": 1,
+      "barycentric": [
+        0.5,
+        0,
+        0.5
+      ],
+      "position2D": {
+        "x": 127.5,
+        "y": -298.779
+      },
+      "heptadCentroid": {
+        "x": 150,
+        "y": -259.808
+      },
+      "fillOrder": 3
+    },
+    {
+      "slotId": "value.hands",
+      "axisId": "value",
+      "stationIndex": 3,
+      "faculty": [
+        "hands"
+      ],
+      "facultyCubeVertex": 4,
+      "personaClass": "mouse",
+      "role": "lead builder",
+      "personaTemplate": "cipher",
+      "isKeystone": false,
+      "fractalSeed": false,
+      "latticeAxisVertex": 1,
+      "barycentric": [
+        0,
+        0,
+        1
+      ],
+      "position2D": {
+        "x": 60,
+        "y": -259.808
+      },
+      "heptadCentroid": {
+        "x": 150,
+        "y": -259.808
+      },
+      "fillOrder": 4
+    },
+    {
+      "slotId": "value.heart-hands",
+      "axisId": "value",
+      "stationIndex": 4,
+      "faculty": [
+        "heart",
+        "hands"
+      ],
+      "facultyCubeVertex": 6,
+      "personaClass": "mouse",
+      "role": "caring builder",
+      "personaTemplate": "algebraist",
+      "isKeystone": false,
+      "fractalSeed": false,
+      "latticeAxisVertex": 1,
+      "barycentric": [
+        0,
+        0.5,
+        0.5
+      ],
+      "position2D": {
+        "x": 127.5,
+        "y": -220.836
+      },
+      "heptadCentroid": {
+        "x": 150,
+        "y": -259.808
+      },
+      "fillOrder": 5
+    },
+    {
+      "slotId": "value.heart",
+      "axisId": "value",
+      "stationIndex": 5,
+      "faculty": [
+        "heart"
+      ],
+      "facultyCubeVertex": 2,
+      "personaClass": "mouse",
+      "role": "steward builder",
+      "personaTemplate": "forgemaster",
+      "isKeystone": false,
+      "fractalSeed": false,
+      "latticeAxisVertex": 1,
+      "barycentric": [
+        0,
+        1,
+        0
+      ],
+      "position2D": {
+        "x": 195,
+        "y": -181.865
+      },
+      "heptadCentroid": {
+        "x": 150,
+        "y": -259.808
+      },
+      "fillOrder": 6
+    },
+    {
+      "slotId": "value.head-heart-hands",
+      "axisId": "value",
+      "stationIndex": 6,
+      "faculty": [
+        "head",
+        "heart",
+        "hands"
+      ],
+      "facultyCubeVertex": 7,
+      "personaClass": "privacy_guide",
+      "role": "keystone guide",
+      "personaTemplate": "soulbae",
+      "isKeystone": true,
+      "fractalSeed": true,
+      "latticeAxisVertex": 1,
+      "barycentric": [
+        0.3333,
+        0.3333,
+        0.3333
+      ],
+      "position2D": {
+        "x": 150,
+        "y": -259.808
+      },
+      "heptadCentroid": {
+        "x": 150,
+        "y": -259.808
+      },
+      "fillOrder": 7
+    }
+  ]
+}

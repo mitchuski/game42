@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>The Game of 42</title>
+<script>
+  // surface any runtime error on-screen (the WebGL scene is otherwise silent)
+  window.__gerr = function (m) {
+    try {
+      let d = document.getElementById('err');
+      if (!d) { d = document.createElement('pre'); d.id = 'err'; document.body.appendChild(d); }
+      d.style.display = 'block';
+      d.textContent = '⚠ ' + m;
+    } catch (e) {}
+  };
+  window.addEventListener('error', (e) =>
+    window.__gerr((e.message || e.type) + '\n' + ((e.error && e.error.stack) || (e.filename + ':' + e.lineno)))
+  );
+  window.addEventListener('unhandledrejection', (e) =>
+    window.__gerr('promise: ' + ((e.reason && (e.reason.stack || e.reason.message)) || e.reason))
+  );
+</script>
+<style>
+  :root{
+    --bg:#0B0E14; --ink:#e9ecf4; --dim:#8c95ad; --line:rgba(255,255,255,.10);
+    --glass:rgba(18,22,33,.72); --sword:#E0A526; --mage:#2563EB; --accent:#38BDF8;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
+    font:13px/1.5 ui-monospace,"Spline Sans Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    overflow:hidden;-webkit-font-smoothing:antialiased}
+  #scene{position:fixed;inset:0;width:100vw;height:100vh;display:block;touch-action:none}
+
+  /* title */
+  #title{position:fixed;left:18px;top:14px;z-index:5;pointer-events:none}
+  #title h1{margin:0;font:600 16px/1.1 Fraunces,Georgia,serif;letter-spacing:.3px}
+  #title p{margin:2px 0 0;color:var(--dim);font-size:11px}
+  .pagenav{margin-top:7px;display:flex;gap:8px;pointer-events:auto}
+  .pagenav a{color:var(--dim);text-decoration:none;font-size:11px;border:1px solid var(--line);padding:2px 10px;border-radius:20px;transition:.15s}
+  .pagenav a:hover{color:var(--ink);border-color:rgba(255,255,255,.28)}
+  .pagenav a.on{color:var(--ink);border-color:rgba(255,255,255,.34);background:rgba(255,255,255,.05)}
+
+  /* console */
+  #console{position:fixed;right:14px;top:14px;width:280px;max-height:calc(100vh - 28px);
+    overflow:auto;z-index:6;background:var(--glass);border:1px solid var(--line);
+    border-radius:14px;backdrop-filter:blur(12px);padding:12px 13px;transition:transform .25s}
+  #console.folded{transform:translateX(calc(100% + 24px))}
+  .grp{margin:0 0 12px}
+  .grp h2{margin:0 0 7px;font:600 10px/1 inherit;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+  .row{display:flex;align-items:center;gap:8px;margin:5px 0}
+  .row label{flex:0 0 92px;color:var(--dim)}
+  .row input[type=range]{flex:1;accent-color:var(--accent);min-width:0}
+  .row .val{flex:0 0 40px;text-align:right;font-variant-numeric:tabular-nums}
+  .btns{display:flex;flex-wrap:wrap;gap:6px}
+  button{font:inherit;color:var(--ink);background:rgba(255,255,255,.05);
+    border:1px solid var(--line);border-radius:9px;padding:6px 10px;cursor:pointer;transition:.15s}
+  button:hover{background:rgba(255,255,255,.11);border-color:rgba(255,255,255,.22)}
+  button.go{background:rgba(56,189,248,.16);border-color:rgba(56,189,248,.4)}
+  .toggle{display:flex;align-items:center;gap:7px;margin:5px 0;color:var(--dim);cursor:pointer}
+  .stat{display:flex;justify-content:space-between;color:var(--dim);margin:3px 0}
+  .stat b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+  .seal{word-break:break-all;font-size:10.5px;color:var(--sword);margin-top:4px;min-height:14px}
+  .legend{display:flex;flex-wrap:wrap;gap:5px 10px;margin-top:4px}
+  .legend span{display:flex;align-items:center;gap:5px;color:var(--dim);font-size:10.5px}
+  .legend i{width:9px;height:9px;border-radius:50%;display:inline-block}
+  input[type=file]{display:none}
+  input[type=color]{margin-left:auto;width:40px;height:22px;border:1px solid var(--line);border-radius:6px;background:none;padding:0;cursor:pointer}
+
+  #inspect{position:fixed;left:14px;bottom:40px;width:262px;z-index:7;background:var(--glass);
+    border:1px solid var(--line);border-radius:14px;backdrop-filter:blur(12px);padding:12px 13px;display:none}
+  #inspect.show{display:block}
+  #inspect h3{margin:0 26px 2px 0;font:600 14px/1.2 Fraunces,Georgia,serif}
+  #inspClose{position:absolute;right:8px;top:7px;padding:2px 8px;border-radius:8px}
+  .imeta{color:var(--dim);font-size:11px;margin-bottom:9px}
+  .imeta b{color:var(--ink);font-weight:600}
+  .imeta .chip{display:inline-block;margin:3px 4px 0 0;padding:1px 7px;border-radius:20px;border:1px solid var(--line)}
+  .ihint{color:var(--dim);font-size:10px;margin-top:7px;line-height:1.4}
+
+  #launcher{position:fixed;right:14px;top:14px;z-index:6;display:none}
+  #launcher.show{display:block}
+
+  #toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(10px);
+    z-index:8;background:var(--glass);border:1px solid var(--line);border-radius:10px;
+    padding:8px 14px;color:var(--ink);opacity:0;transition:.25s;pointer-events:none;backdrop-filter:blur(8px)}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  #hint{position:fixed;left:18px;bottom:14px;z-index:5;color:var(--dim);font-size:11px;pointer-events:none}
+  @media(max-width:760px){
+    #console{left:8px;right:8px;width:auto;max-height:46vh;top:auto;bottom:8px}
+    #console.folded{transform:translateY(calc(100% + 24px))}
+    #launcher{top:auto;bottom:8px;right:8px}
+    #inspect{left:8px;right:8px;width:auto;bottom:auto;top:64px;max-height:48vh;overflow:auto}
+    #title h1{font-size:14px} #title p{display:none}
+    #hint{display:none}
+  }
+  #latentcopy{position:fixed;left:50%;top:64px;transform:translateX(-50%);z-index:5;color:#dfe6ff;opacity:.0;
+    font:italic 500 15px/1 Fraunces,Georgia,serif;letter-spacing:.4px;pointer-events:none;transition:opacity .8s}
+  #latentcopy.show{opacity:.7}
+  .seg{display:flex;gap:4px;flex:1}
+  .seg button{flex:1;padding:5px 4px}
+  .seg button.on{background:rgba(56,189,248,.16);border-color:rgba(56,189,248,.4)}
+  /* [f] focus mode — fade all chrome, keep the sculpture turning */
+  body.focus #console,body.focus #title,body.focus #hint,body.focus #diag,body.focus #inspect,
+  body.focus #launcher,body.focus #latentcopy{opacity:0 !important;pointer-events:none !important;transition:opacity .6s}
+  .focusbadge{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:9;background:var(--glass);
+    border:1px solid var(--line);border-radius:20px;padding:6px 14px;color:var(--ink);font-size:11px;opacity:0;
+    pointer-events:none;transition:opacity .5s;backdrop-filter:blur(8px)}
+  .focusbadge.show{opacity:.82;pointer-events:auto;cursor:pointer}
+  #diag{position:fixed;right:14px;bottom:14px;z-index:5;color:var(--dim);font-size:10.5px;pointer-events:none;font-variant-numeric:tabular-nums}
+  #tip{position:fixed;z-index:9;pointer-events:none;background:var(--glass);border:1px solid var(--line);border-radius:9px;
+    padding:6px 9px;font-size:11px;color:var(--ink);opacity:0;transition:opacity .12s;backdrop-filter:blur(8px);max-width:230px}
+  #tip.show{opacity:.96}
+  #tip .d{color:var(--dim)}
+  #err{display:none;position:fixed;left:12px;bottom:40px;max-width:60vw;max-height:50vh;overflow:auto;z-index:30;
+    margin:0;padding:10px 12px;background:rgba(40,8,8,.92);border:1px solid #a33;border-radius:10px;color:#ffb4b4;
+    font:11px/1.45 ui-monospace,monospace;white-space:pre-wrap}
+</style>
+</head>
+<body>
+  <canvas id="scene"></canvas>
+
+  <div id="title">
+    <h1>The Game of 42</h1>
+    <p>six axes &times; seven stations &middot; fold to the star</p>
+    <nav class="pagenav"><a href="./index.html">map</a><a href="./territory.html" class="on">territory</a><a href="./constellation.html">constellation</a><a href="./grid.html">grid</a></nav>
+  </div>
+
+  <button id="launcher" class="go">&#9776; console</button>
+
+  <aside id="console">
+    <div class="grp">
+      <h2>Play</h2>
+      <div class="btns">
+        <button id="bIgnite">Ignite roots</button>
+        <button id="bStep">Step fill</button>
+        <button id="bPlay" class="go">&#9654; Auto-play</button>
+        <button id="bReset">Reset</button>
+        <button id="bFocus">&#127916; Focus (F)</button>
+      </div>
+    </div>
+
+    <div class="grp">
+      <h2>Game</h2>
+      <div class="seg" id="preset"><button data-g="fish">&#128031; fish</button><button data-g="mice">&#128045; mice</button><button data-g="mages" class="on">&#129497; mages</button><button data-g="mine">&#9998; my42</button></div>
+      <div id="presetTag" style="color:var(--dim);font-size:11px;margin-top:7px"></div>
+    </div>
+
+    <div class="grp">
+      <h2>State</h2>
+      <div class="stat"><span>completion p</span><b id="sP">0.00</b></div>
+      <div class="stat"><span>sealed slots</span><b id="sSealed">0 / 42</b></div>
+      <div class="stat"><span>heptads locked</span><b id="sHept">0 / 6</b></div>
+      <div class="stat"><span>board</span><b id="sBoard">seeded</b></div>
+      <div class="stat"><span>group seal</span><b></b></div>
+      <div class="seal" id="sSeal">&mdash;</div>
+    </div>
+
+    <div class="grp">
+      <h2>Fold &amp; feel</h2>
+      <div class="row"><label>fold p (manual)</label><input id="rP" type="range" min="0" max="1" step="0.01" value="0"><span class="val" id="rPv">0.00</span></div>
+      <div class="row"><label>&theta; max</label><input id="rTheta" type="range" min="0" max="90" step="1" value="70"><span class="val" id="rThetav">70</span></div>
+      <div class="row"><label>twist</label><input id="rTwist" type="range" min="0" max="360" step="1" value="138"><span class="val" id="rTwistv">138</span></div>
+      <div class="row"><label>breathe</label><input id="rBreathe" type="range" min="0" max="0.3" step="0.005" value="0.05"><span class="val" id="rBreathev">0.05</span></div>
+      <div class="row"><label>spin</label><input id="rSpin" type="range" min="0" max="1" step="0.02" value="0.18"><span class="val" id="rSpinv">0.18</span></div>
+      <div class="row"><label>star</label><span class="seg" id="starMode"><button data-m="facet" class="on">facet</button><button data-m="surface">surface</button><button data-m="wire">wire</button></span></div>
+      <div class="row"><label>self star</label><input id="rStarSize" type="range" min="0.4" max="1.8" step="0.05" value="1"><span class="val" id="rStarSizev">1.00</span></div>
+      <label class="toggle"><input id="tStar" type="checkbox" checked> floating star</label>
+      <label class="toggle"><input id="tCore" type="checkbox" checked> core spiral (keystone hexad)</label>
+      <label class="toggle"><input id="tReduce" type="checkbox"> reduced motion</label>
+      <label class="toggle"><input id="tManual" type="checkbox"> manual fold (ignore play)</label>
+    </div>
+
+    <div class="grp">
+      <h2>Colours</h2>
+      <div class="row"><label>sword &#9876;&#65039;</label><input id="cSword" type="color" value="#e0a526"></div>
+      <div class="row"><label>mage &#129497;</label><input id="cMage" type="color" value="#2563eb"></div>
+      <div class="row"><label>head&middot;soil</label><input id="cHead" type="color" value="#5b8cff"></div>
+      <div class="row"><label>heart&middot;soul</label><input id="cHeart" type="color" value="#ff5b8c"></div>
+      <div class="row"><label>hands&middot;society</label><input id="cHands" type="color" value="#5bffae"></div>
+      <div class="row"><label>ground</label><input id="cGround" type="color" value="#0b0e14"></div>
+      <div class="row"><label>faculty tint</label><input id="rTint" type="range" min="0" max="1" step="0.05" value="0.5"><span class="val" id="rTintv">0.50</span></div>
+      <div class="btns"><button id="cReset">reset colours</button></div>
+    </div>
+
+    <div class="grp">
+      <h2>Carry</h2>
+      <div class="btns">
+        <button id="bSave">&#128247; Save PNG</button>
+        <button id="bLoad">&#8682; Load PNG</button>
+        <input id="fLoad" type="file" accept="image/png,application/json">
+      </div>
+    </div>
+
+    <div class="grp">
+      <h2>Legend</h2>
+      <div class="legend" id="legendAxis"></div>
+      <div class="legend" style="margin-top:6px">
+        <span><i style="background:#38BDF8"></i>vision fish</span>
+        <span><i style="background:#C9A227"></i>mouse</span>
+        <span><i style="background:#F5F0E1;box-shadow:0 0 0 2px #2563EB inset"></i>guide</span>
+      </div>
+      <div class="legend" id="legendTriad" style="margin-top:6px"></div>
+    </div>
+
+    <div class="grp" style="margin-bottom:2px">
+      <button id="bFold" style="width:100%">&#9776; hide console</button>
+    </div>
+  </aside>
+
+  <aside id="inspect">
+    <button id="inspClose">&times;</button>
+    <h3 id="inspTitle">slot</h3>
+    <div class="imeta" id="inspMeta"></div>
+    <div class="grp" style="margin:0">
+      <h2>faculty &middot; mirror</h2>
+      <div class="row"><label id="lHead">head&middot;soil</label><input id="iHead" type="range" min="0" max="1" step="0.01"><span class="val" id="iHeadv"></span></div>
+      <div class="row"><label id="lHeart">heart&middot;soul</label><input id="iHeart" type="range" min="0" max="1" step="0.01"><span class="val" id="iHeartv"></span></div>
+      <div class="row"><label id="lHands">hands&middot;society</label><input id="iHands" type="range" min="0" max="1" step="0.01"><span class="val" id="iHandsv"></span></div>
+    </div>
+    <div class="ihint">colour = this node&rsquo;s head/heart/hands (soil/soul/society) mix. The station&rsquo;s position is canonical and stays fixed.</div>
+  </aside>
+
+  <div id="toast"></div>
+  <div id="tip"></div>
+  <div class="focusbadge" id="focusbadge">focus &middot; S snaps 📸 &middot; tap / Esc / F to exit</div>
+  <div id="latentcopy">map the first star</div>
+  <div id="hint">drag to orbit &middot; scroll to zoom &middot; tap a slot to inspect</div>
+  <div id="diag">booting&hellip;</div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

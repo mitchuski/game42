@@ -1,0 +1,21 @@
+{
+  "name": "game42",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The Game of 42 — governance assembly visualisation. Six axes x seven faculty stations fold by the golden angle into a floating star tetrahedron; a sealed game is one trust-graph node.",
+  "author": "privacymage / 0xagentprivacy",
+  "license": "Apache-2.0",
+  "scripts": {
+    "dev": "vite",
+    "check": "node scripts/conform.mjs",
+    "build": "node scripts/conform.mjs && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "three": "^0.161.0"
+  },
+  "devDependencies": {
+    "vite": "^5.2.0"
+  }
+}

@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>The Game of 42 — Constellation</title>
+<style>
+  :root{ --bg:#0B0E14; --ink:#e9ecf4; --dim:#8c95ad; --line:rgba(255,255,255,.10); --glass:rgba(18,22,33,.72); --accent:#38BDF8; }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);overflow:hidden;
+    font:13px/1.5 ui-monospace,"Spline Sans Mono",Menlo,Consolas,monospace}
+  #scene{position:fixed;inset:0;width:100vw;height:100vh;display:block;touch-action:none}
+  #title{position:fixed;left:18px;top:14px;z-index:5;pointer-events:none}
+  #title h1{margin:0;font:600 16px/1.1 Fraunces,Georgia,serif}
+  #title p{margin:2px 0 0;color:var(--dim);font-size:11px}
+  .pagenav{margin-top:7px;display:flex;gap:8px;pointer-events:auto}
+  .pagenav a{color:var(--dim);text-decoration:none;font-size:11px;border:1px solid var(--line);padding:2px 10px;border-radius:20px}
+  .pagenav a:hover{color:var(--ink);border-color:rgba(255,255,255,.28)}
+  .pagenav a.on{color:var(--ink);border-color:rgba(255,255,255,.34);background:rgba(255,255,255,.05)}
+  #panel{position:fixed;right:14px;top:14px;z-index:6;background:var(--glass);border:1px solid var(--line);
+    border-radius:14px;backdrop-filter:blur(12px);padding:12px 14px;width:228px}
+  #panel h2{margin:0 0 8px;font:600 10px/1 inherit;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+  .row{display:flex;align-items:center;gap:8px;margin:6px 0}
+  .row label{flex:0 0 70px;color:var(--dim)}
+  .row input[type=range]{flex:1;accent-color:var(--accent);min-width:0}
+  .stat{display:flex;justify-content:space-between;color:var(--dim);margin:3px 0}
+  .stat b{color:var(--ink)}
+  label.t{display:flex;gap:7px;color:var(--dim);cursor:pointer;margin:6px 0}
+  .seg{display:flex;gap:4px;margin:8px 0}
+  .seg button{flex:1;width:auto;margin-top:0;font:inherit;color:var(--ink);background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:8px;padding:5px 4px;cursor:pointer}
+  .seg button.on{background:rgba(56,189,248,.16);border-color:rgba(56,189,248,.4)}
+  button{font:inherit;color:var(--ink);background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:9px;padding:6px 10px;cursor:pointer;margin-top:8px;width:100%}
+  button:hover{background:rgba(255,255,255,.11);border-color:rgba(255,255,255,.22)}
+  #fKey{display:none}
+  #hint{position:fixed;left:18px;bottom:14px;z-index:5;color:var(--dim);font-size:11px;pointer-events:none}
+  @media(max-width:760px){
+    #panel{left:8px;right:8px;width:auto;top:auto;bottom:8px;max-height:44vh;overflow:auto}
+    #title h1{font-size:14px} #title p{display:none} #hint{display:none}
+  }
+  body.focus #panel,body.focus #title,body.focus #hint{opacity:0 !important;pointer-events:none !important;transition:opacity .6s}
+  .focusbadge{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:9;background:var(--glass);
+    border:1px solid var(--line);border-radius:20px;padding:6px 14px;color:var(--ink);font-size:11px;opacity:0;
+    pointer-events:none;transition:opacity .5s;backdrop-filter:blur(8px)}
+  .focusbadge.show{opacity:.82;pointer-events:auto;cursor:pointer}
+  #err{display:none;position:fixed;left:12px;bottom:40px;max-width:60vw;z-index:30;margin:0;padding:10px 12px;
+    background:rgba(40,8,8,.92);border:1px solid #a33;border-radius:10px;color:#ffb4b4;font:11px/1.45 ui-monospace,monospace;white-space:pre-wrap}
+</style>
+<script>
+  window.__gerr=function(m){try{let d=document.getElementById('err');if(!d){d=document.createElement('pre');d.id='err';document.body.appendChild(d);}d.style.display='block';d.textContent='⚠ '+m;}catch(e){}};
+  window.addEventListener('error',e=>window.__gerr((e.message||e.type)+'\n'+((e.error&&e.error.stack)||(e.filename+':'+e.lineno))));
+</script>
+</head>
+<body>
+  <canvas id="scene"></canvas>
+  <div id="title">
+    <h1>The Game of 42 — Constellation</h1>
+    <p>all my games &middot; 42 games of 42 folding into one star</p>
+    <nav class="pagenav"><a href="./index.html">map</a><a href="./territory.html">territory</a><a href="./constellation.html" class="on">constellation</a><a href="./grid.html">grid</a></nav>
+  </div>
+  <aside id="panel">
+    <h2>the greater shape</h2>
+    <div class="stat"><span>games</span><b id="sGames">42</b></div>
+    <div class="stat"><span>stations</span><b id="sNodes">1764</b></div>
+    <div class="row"><label>spread</label><input id="rSpread" type="range" min="1" max="3" step="0.05" value="1.8"></div>
+    <div class="row"><label>games lit</label><input id="rLit" type="range" min="0" max="42" step="1" value="42"></div>
+    <div class="row"><label>spin</label><input id="rSpin" type="range" min="0" max="0.4" step="0.01" value="0.08"></div>
+    <label class="t"><input id="tStar" type="checkbox" checked> greater star</label>
+    <label class="t"><input id="tThreads" type="checkbox" checked> connections</label>
+    <label class="t"><input id="tWave" type="checkbox" checked> light wave</label>
+    <label class="t"><input id="tGrid" type="checkbox"> light from grid</label>
+    <label class="t"><input id="tFlow" type="checkbox" checked> core flow (duos)</label>
+    <div class="seg" id="starMode"><button data-m="facet" class="on">facet</button><button data-m="surface">surface</button><button data-m="wire">wire</button></div>
+    <div class="row"><label>star size</label><input id="rStarSize" type="range" min="0.5" max="4" step="0.1" value="2.6"></div>
+    <button id="bKey">&#11088; insert your star</button>
+    <button id="bFocus">&#127916; focus (F)</button>
+    <input id="fKey" type="file" accept="image/png,application/json">
+    <div id="yourstar" style="color:var(--dim);font-size:10.5px;margin-top:8px"></div>
+  </aside>
+  <div id="hint">drag to orbit &middot; scroll to zoom &middot; <b style="color:#cfe0ff">F</b> focus</div>
+  <div class="focusbadge" id="focusbadge">focus &middot; tap / Esc / F to exit</div>
+  <script type="module" src="/src/constellation.js"></script>
+</body>
+</html>

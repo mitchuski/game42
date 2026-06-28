@@ -1,0 +1,44 @@
+{
+  "$comment": "JSON Schemas for the Game of 42 trust protocol. Draft 2020-12.",
+  "VerifiableRelationshipCredential": {
+    "$id": "vrc.schema.json",
+    "type": "object",
+    "required": ["vrcId","slotId","axisId","candidate","root","proverb","issuedAt","polarity"],
+    "properties": {
+      "vrcId": {"type":"string","description":"content-addressed id of this edge"},
+      "slotId": {"type":"string","description":"slot this edge fills, e.g. compute.head"},
+      "axisId": {"type":"string","enum":["compute","connection","delegation","protection","memory","value"]},
+      "candidate": {"type":"object","required":["did"],"properties":{"did":{"type":"string"},"label":{"type":"string"}}},
+      "root": {"type":"object","required":["did"],"properties":{"did":{"type":"string"},"label":{"type":"string"}}},
+      "polarity": {"type":"string","enum":["+","-"],"description":"Promise Theory polarity of the bilateral relationship"},
+      "proverb": {"type":"string","description":"lowercase relationship proverb minted in the ceremony (RPP)"},
+      "trustTaskRef": {"type":"string","description":"reference to the completed trust task evidence"},
+      "issuedAt": {"type":"string","format":"date-time"},
+      "expiresAt": {"type":["string","null"],"format":"date-time"}
+    }
+  },
+  "KappaLabel": {
+    "$id": "kappa-label.schema.json",
+    "type": "object",
+    "required": ["kappa","slotId","over"],
+    "properties": {
+      "kappa": {"type":"string","description":"SHA-256 over the canonical serialisation of the VRC, hex"},
+      "slotId": {"type":"string"},
+      "over": {"type":"string","const":"VerifiableRelationshipCredential"},
+      "alg": {"type":"string","const":"SHA-256"}
+    }
+  },
+  "GroupSeal": {
+    "$id": "group-seal.schema.json",
+    "type": "object",
+    "required": ["seal","gameId","kappaLabels","geometryHash","sealedAt"],
+    "properties": {
+      "seal": {"type":"string","description":"SHA-256 over canonical serialisation of {kappaLabels (sorted by slotId), geometryHash}"},
+      "gameId": {"type":"string","description":"trust-graph node id == seal"},
+      "kappaLabels": {"type":"array","items":{"type":"string"},"minItems":42,"maxItems":42},
+      "geometryHash": {"type":"string","description":"SHA-256 over the folded geometry state at p=1"},
+      "parentGuideSlot": {"type":["string","null"],"description":"if this game nests under a parent guide (fractal seam)"},
+      "sealedAt": {"type":"string","format":"date-time"}
+    }
+  }
+}

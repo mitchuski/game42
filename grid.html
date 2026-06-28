@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>The Game of 42 — Grid</title>
+<style>
+  :root{ --bg:#0B0E14; --ink:#e9ecf4; --dim:#8c95ad; --line:rgba(255,255,255,.10); --glass:rgba(18,22,33,.72); --accent:#38BDF8; }
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);
+    font:13px/1.6 ui-monospace,"Spline Sans Mono",Menlo,Consolas,monospace}
+  a{color:var(--accent)}
+  header{padding:20px 22px 8px}
+  header h1{margin:0;font:600 22px/1.1 Fraunces,Georgia,serif}
+  header p{margin:4px 0 0;color:var(--dim)}
+  .pagenav{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
+  .pagenav a{color:var(--dim);text-decoration:none;font-size:12px;border:1px solid var(--line);padding:3px 12px;border-radius:20px}
+  .pagenav a:hover{color:var(--ink);border-color:rgba(255,255,255,.28)}
+  .pagenav a.on{color:var(--ink);border-color:rgba(255,255,255,.34);background:rgba(255,255,255,.05)}
+
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:6px 22px 0}
+  button{font:inherit;color:var(--ink);background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:9px;padding:7px 12px;cursor:pointer}
+  button:hover{background:rgba(255,255,255,.11);border-color:rgba(255,255,255,.22)}
+  button.go{background:rgba(56,189,248,.16);border-color:rgba(56,189,248,.4)}
+  .toolbar .hint{color:var(--dim);font-size:11px}
+  #wikiUrl{flex:1;min-width:200px;background:rgba(0,0,0,.25);color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:7px 10px;font:11px ui-monospace,monospace}
+  #fAdd{display:none}
+
+  main{display:grid;grid-template-columns:1fr 320px;gap:18px;padding:14px 22px 60px;align-items:start}
+  @media(max-width:900px){ main{grid-template-columns:1fr} }
+  #rightcol{display:flex;flex-direction:column;gap:18px}
+  #cboard svg{width:100%;height:auto;display:block}
+  .card select,.card .emoji,.card .prov{margin-top:6px;background:rgba(0,0,0,.25);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:5px;font:11px ui-monospace,monospace}
+  .card select,.card .prov{width:100%}
+  .card .emoji{width:70px;text-align:center;font-size:14px;cursor:pointer}
+  #emojipick{position:fixed;z-index:40;display:none;flex-wrap:wrap;gap:2px;width:268px;max-height:240px;overflow:auto;background:var(--glass);border:1px solid var(--line);border-radius:12px;padding:8px;backdrop-filter:blur(10px)}
+  #emojipick.show{display:flex}
+  #emojipick button{font-size:18px;line-height:1;background:none;border:none;border-radius:6px;padding:4px 5px;cursor:pointer;margin:0}
+  #emojipick button:hover{background:rgba(255,255,255,.14)}
+  #wrap{position:relative;min-height:200px}
+  #links{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+  #cards{position:relative;z-index:1;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+  .card{background:var(--glass);border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center;position:relative}
+  .card canvas{width:124px;height:124px;display:block;margin:0 auto 8px}
+  .card .nm{font-weight:600;font-size:12px;word-break:break-word}
+  .card .meta{color:var(--dim);font-size:10px;margin-top:3px;word-break:break-all}
+  .card .badge{position:absolute;top:8px;left:8px;font-size:10px;padding:1px 7px;border-radius:20px;border:1px solid var(--line);color:var(--dim)}
+  .card .rm{position:absolute;top:6px;right:8px;cursor:pointer;color:var(--dim);border:none;background:none;padding:2px 6px}
+  .card.self{border-color:rgba(224,165,38,.45)}
+  .empty{color:var(--dim);border:1px dashed var(--line);border-radius:14px;padding:40px 20px;text-align:center}
+
+  .panel{background:var(--glass);border:1px solid var(--line);border-radius:16px;padding:16px 18px}
+  .panel h2{font:600 11px/1 inherit;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin:0 0 10px}
+  textarea{width:100%;min-height:120px;background:rgba(0,0,0,.25);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px;font:11px/1.5 ui-monospace,monospace;resize:vertical}
+  .kout{margin-top:8px;color:var(--accent);word-break:break-all;font-size:11px;min-height:16px}
+  .legend{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:10px;color:var(--dim);font-size:11px}
+  .legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle}
+</style>
+</head>
+<body>
+  <header>
+    <h1>The Game of 42 — Grid</h1>
+    <p>the plurality of self and other &middot; assemble your games and keys into one trust graph</p>
+    <nav class="pagenav"><a href="./index.html">map</a><a href="./territory.html">territory</a><a href="./constellation.html">constellation</a><a href="./grid.html" class="on">grid</a></nav>
+  </header>
+  <div class="toolbar">
+    <button id="bAdd" class="go">&#43; add games / keys</button>
+    <button id="bMine">mark mine</button>
+    <button id="bSave">&#128247; save grid</button>
+    <button id="bClear">clear</button>
+    <input id="wikiUrl" type="text" placeholder="http://game42.localhost:3030/example-game--the-first-six">
+    <button id="bWiki">&#43; from wiki URL</button>
+    <span class="hint">drop game-of-42 / City-Key PNGs anywhere, or pull a game from a FedWiki page &middot; each becomes a sigil of its &kappa;</span>
+    <input id="fAdd" type="file" accept="image/png,application/json" multiple>
+  </div>
+  <main>
+    <div id="wrap">
+      <svg id="links"></svg>
+      <div id="cards"></div>
+      <div class="empty" id="empty">no games yet — <b>add</b> or drop a game-of-42 / City-Key PNG. teal threads = common ground (shared &kappa; prefix); gold = lineage.</div>
+    </div>
+    <div id="rightcol">
+      <div class="panel" id="cpanel">
+        <h2>constellation — assign the 42</h2>
+        <div id="cboard"></div>
+        <div id="cdetail" style="color:var(--dim);font-size:11px;margin-top:8px;min-height:32px">tap a filled square to read its artefact</div>
+        <p style="color:var(--dim);margin:8px 0 0;font-size:11px">give each game an <b>emoji</b> + <b>proverb/spell</b>, then assign it (card &#9662;) to one of the 42; shared &kappa; links them into a new set. <button id="cExport" style="margin-top:8px;width:100%">&#128247; save constellation</button><button id="cClear" style="margin-top:6px;width:100%">clear assignments</button></p>
+      </div>
+      <div class="panel">
+        <h2>encode a &kappa;</h2>
+        <p style="color:var(--dim);margin:0 0 8px;font-size:11px">paste any JSON; this derives its content address the same way the game seals do — sorted keys, compact, SHA-256.</p>
+        <textarea id="kin" spellcheck="false" placeholder='{"slotId":"compute.head","axisId":"compute"}'></textarea>
+        <button id="bDerive" style="margin-top:8px;width:100%">derive &kappa;</button>
+        <div class="kout" id="kout"></div>
+        <div class="legend">
+          <span><i style="background:#38bdf8"></i>common ground</span>
+          <span><i style="background:#e0a526"></i>lineage (prior)</span>
+          <span><i style="background:#e0a526;box-shadow:0 0 0 2px rgba(224,165,38,.4)"></i>mine</span>
+        </div>
+      </div>
+    </div>
+  </main>
+  <div id="emojipick"></div>
+  <script type="module" src="/src/grid.js"></script>
+</body>
+</html>
