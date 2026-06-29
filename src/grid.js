@@ -4,8 +4,8 @@
 // ground) or lineage (prior). A κ-encoder derives content addresses on demand.
 import { pngExtract, pngEmbed } from './pngkey.js';
 import { canonical, sha256hex } from './hash.js';
-import { SLOTS, SLOTS_BY_AXIS, AXIS_ORDER } from './data.js';
-import { POOL } from './personas.js';
+import { SLOTS, SLOTS_BY_AXIS, AXIS_ORDER, AXIS_BY_ID } from './data.js';
+import { POOL, MAGES_42, personaGlyph, personaName } from './personas.js';
 import { conformImport } from './conform.js';
 import { fetchGame } from './fedwiki.js';
 
@@ -173,14 +173,23 @@ function render() {
   for (const it of items) {
     const el = document.createElement('div');
     el.className = 'card' + (it.mine ? ' self' : '');
+    // a game (a set of 42) can be assigned into a constellation's 42; a key is a
+    // role WITHIN a game — it seats on a station via the map, not in the 42.
+    const assignable = it.kind !== 'key';
+    const control = assignable
+      ? `<select class="assign"><option value="">— assign to a constellation (the 42) —</option>${AXIS_ORDER.map((a) => `<optgroup label="${a}">` + SLOTS_BY_AXIS[a].map((s) => `<option value="${s.slotId}"${assign[s.slotId] === it.kappaRaw ? ' selected' : ''}>${s.slotId}</option>`).join('') + `</optgroup>`).join('')}</select>`
+      : `<div class="keynote">a <b>key</b> is a role <i>within</i> a game — seat it on a station via the <a href="./map.html" style="color:#9fb4e8">map</a>, not in the 42.</div>`;
     el.innerHTML =
       `<span class="badge">${it.kind === 'game' ? '🎴 game' : it.kind === 'key' ? '🗝️ key' : '◇'}</span>` +
       `<button class="rm" title="remove">✕</button>` +
       `<canvas></canvas>` +
       `<div class="nm">${esc(it.name)}</div>` +
       `<div class="meta">κ ${it.kappaRaw ? it.kappaRaw.slice(0, 12) + '…' : '—'}</div>` +
-      `<div style="display:flex;gap:6px"><input class="emoji" maxlength="6" placeholder="🎴" value="${esc(it.emoji || '')}"><input class="prov" placeholder="proverb / spell" value="${esc(it.proverb || '')}"></div>` +
-      `<select class="assign"><option value="">— assign to 42 —</option>${AXIS_ORDER.map((a) => `<optgroup label="${a}">` + SLOTS_BY_AXIS[a].map((s) => `<option value="${s.slotId}"${assign[s.slotId] === it.kappaRaw ? ' selected' : ''}>${s.slotId}</option>`).join('') + `</optgroup>`).join('')}</select>`;
+      `<div class="cardfields">` +
+        `<div class="emojirow"><span>glyph</span><input class="emoji" maxlength="6" placeholder="🎴" value="${esc(it.emoji || '')}"></div>` +
+        `<textarea class="prov" placeholder="proverb / spell — type your incantation here…">${esc(it.proverb || '')}</textarea>` +
+      `</div>` +
+      control;
     cards.appendChild(el);
     drawSigil(el.querySelector('canvas'), it.kappaRaw, it.palette);
     it._el = el;
@@ -188,11 +197,11 @@ function render() {
     el.addEventListener('click', () => { it.mine = !it.mine; render(); });
     const stop = (e) => e.stopPropagation();
     const em = el.querySelector('.emoji'), pv = el.querySelector('.prov'), sel = el.querySelector('.assign');
-    [em, pv, sel].forEach((n) => n.addEventListener('click', stop));
+    [em, pv, sel].forEach((n) => n && n.addEventListener('click', stop));
     em.addEventListener('focus', () => showPicker(em, it));
     em.addEventListener('input', (e) => { e.stopPropagation(); it.emoji = e.target.value; persist(); renderCBoard(); });
     pv.addEventListener('input', (e) => { e.stopPropagation(); it.proverb = e.target.value; persist(); });
-    sel.addEventListener('change', (e) => {
+    if (sel) sel.addEventListener('change', (e) => {
       e.stopPropagation();
       const k = it.kappaRaw;
       for (const sl in assign) if (assign[sl] === k) delete assign[sl]; // a game holds one slot
@@ -206,39 +215,52 @@ function render() {
 }
 
 // ---- constellation board: the 42 you fill by assigning games --------------
-function buildCBoard() {
-  const S = 0.5; // 390*0.5 -> within ±220
-  const px = (s) => (s.position2D.x * S).toFixed(1), py = (s) => (-s.position2D.y * S).toFixed(1);
-  let svg = `<svg viewBox="-220 -220 440 440" role="img">`;
-  // threads first: assigned games sharing κ-prefix link into the new set
-  const asg = SLOTS.filter((s) => assign[s.slotId] && byKappa(assign[s.slotId]));
-  for (let i = 0; i < asg.length; i++) for (let j = i + 1; j < asg.length; j++) {
-    const A = byKappa(assign[asg[i].slotId]), B = byKappa(assign[asg[j].slotId]);
-    if (!A.kappaRaw || !B.kappaRaw) continue;
-    let pre = 0; while (pre < 64 && A.kappaRaw[pre] === B.kappaRaw[pre]) pre++;
-    if (pre >= 4) svg += `<line x1="${px(asg[i])}" y1="${py(asg[i])}" x2="${px(asg[j])}" y2="${py(asg[j])}" stroke="#38bdf8" stroke-opacity="${Math.min(0.6, 0.12 + pre * 0.05).toFixed(2)}" stroke-width="1.2"/>`;
-  }
-  for (const s of SLOTS) {
-    const it = assign[s.slotId] ? byKappa(assign[s.slotId]) : null;
-    svg += `<g class="cnode" data-slot="${s.slotId}" style="cursor:pointer">`;
-    svg += `<circle cx="${px(s)}" cy="${py(s)}" r="${it ? 8 : 3.5}" fill="${it ? '#38bdf8' : '#33405e'}" fill-opacity="${it ? '1' : '.5'}"/>`;
-    if (it) {
-      const g = it.emoji || (it.name || '?').slice(0, 2);
-      svg += `<text x="${px(s)}" y="${py(s)}" text-anchor="middle" dy=".34em" font-size="${it.emoji ? 11 : 7}"${it.emoji ? '' : ' font-weight="700" fill="#0b0e14"'}>${esc(g)}</text>`;
-    }
-    svg += `</g>`;
-  }
-  return svg + `</svg>`;
+// a legible 6-axis × 7-station grid; each filled square is a sealed game on its
+// axis colour. The constellation page renders the fractal flow of this same
+// assignment. When nothing's assigned yet it ghosts the City of Mages example.
+let showGhost = null; // null => auto (ghost only while empty)
+function magesAt(s) {
+  const arr = MAGES_42[s.axisId], key = arr && arr[s.fillOrder - 1];
+  return key ? { glyph: personaGlyph(key), name: personaName(key) } : null;
 }
+function ghostOn() {
+  if (showGhost !== null) return showGhost;
+  return !SLOTS.some((s) => assign[s.slotId] && byKappa(assign[s.slotId])); // auto: ghost while empty
+}
+const byId = (sl) => SLOTS.find((s) => s.slotId === sl) || {};
 function renderCBoard() {
   const el = $('cboard');
   if (!el) return;
-  el.innerHTML = buildCBoard();
-  el.querySelectorAll('.cnode').forEach((g) => g.addEventListener('click', () => {
+  let filled = 0, html = '';
+  for (const ax of AXIS_ORDER) {
+    const col = AXIS_BY_ID[ax].colour;
+    html += `<div class="cb-label" title="${esc(ax)}"><span class="d" style="background:${col}"></span>${esc(ax)}</div>`;
+    for (const s of SLOTS_BY_AXIS[ax]) {
+      const it = assign[s.slotId] ? byKappa(assign[s.slotId]) : null;
+      if (it) {
+        filled++;
+        const g = it.emoji || (it.kind === 'key' ? '🗝️' : '🎴');
+        html += `<div class="sq filled${it.kind === 'key' ? ' key' : ''}" data-slot="${s.slotId}" style="background:${col}22;border-color:${col}88" title="${esc(it.name || s.slotId)}">${esc(g)}</div>`;
+      } else if (ghostOn()) {
+        const m = magesAt(s);
+        html += `<div class="sq ghost" data-slot="${s.slotId}" data-ghost="1" title="example · ${esc(m ? m.name : s.slotId)}">${m ? esc(m.glyph) : ''}</div>`;
+      } else {
+        html += `<div class="sq empty" data-slot="${s.slotId}" title="${esc(s.slotId)} — empty">${s.fillOrder}</div>`;
+      }
+    }
+  }
+  el.innerHTML = html;
+  $('cbCount').innerHTML = `<b>${filled}</b> / 42`;
+  $('cbProg').style.width = (filled / 42 * 100).toFixed(1) + '%';
+  $('cbSub').innerHTML = filled >= 42
+    ? '✦ <span style="color:#7be0b0">sealed — whole</span>'
+    : (ghostOn() && !filled) ? 'the City of Mages example' : 'fill them all out';
+  const gb = $('cGhost'); if (gb) gb.textContent = ghostOn() ? 'hide example' : 'show example';
+  el.querySelectorAll('.sq').forEach((g) => g.addEventListener('click', () => {
     const sl = g.dataset.slot, it = assign[sl] ? byKappa(assign[sl]) : null;
-    $('cdetail').innerHTML = it
-      ? `<b>${esc(sl)}</b> ${esc(it.emoji || '')} <b style="color:var(--ink)">${esc(it.name)}</b>` + (it.proverb ? `<br><span style="color:var(--ink)">“${esc(it.proverb)}”</span>` : '') + `<br><span style="color:var(--dim)">κ ${esc((it.kappaRaw || '').slice(0, 16))}…</span>`
-      : `<span style="color:var(--dim)">${esc(sl)} — empty</span>`;
+    if (it) $('cdetail').innerHTML = `${esc(it.emoji || '')} <b style="color:var(--ink)">${esc(it.name)}</b>` + (it.proverb ? `<br><span style="color:var(--ink)">“${esc(it.proverb)}”</span>` : '') + `<br><span style="color:var(--accent)">κ ${esc((it.kappaRaw || '').slice(0, 16))}…</span> · <span style="color:var(--dim)">${esc(sl)}</span>`;
+    else if (g.dataset.ghost) { const m = magesAt(byId(sl)); $('cdetail').innerHTML = `<span style="color:var(--dim)">example · ${esc(m ? m.name : sl)} — load a game to seal your own</span>`; }
+    else $('cdetail').innerHTML = `<span style="color:var(--dim)">${esc(sl)} — empty · assign a game by its card ▾</span>`;
   }));
 }
 
@@ -335,6 +357,7 @@ $('bDerive').addEventListener('click', async () => {
   } catch (e) { $('kout').textContent = '⚠ not valid JSON'; }
 });
 $('cClear').addEventListener('click', () => { assign = {}; saveAssign(); renderCBoard(); $('cdetail').textContent = 'tap a filled square to read its artefact'; });
+$('cGhost').addEventListener('click', () => { showGhost = !ghostOn(); renderCBoard(); });
 $('cExport').addEventListener('click', exportConstellation);
 ['dragover', 'drop'].forEach((ev) => document.addEventListener(ev, (e) => { e.preventDefault(); }));
 document.addEventListener('drop', (e) => { if (e.dataTransfer && e.dataTransfer.files.length) addFiles(e.dataTransfer.files); });

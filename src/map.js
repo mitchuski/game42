@@ -280,6 +280,16 @@ function refreshViews(game) {
   renderTutor();
 }
 
+// your keys = the City-Key roles you hold (the keys collected on the Grid).
+// These are the "first person" options: seating one places you / your credential.
+function readMyKeys() {
+  try {
+    const list = JSON.parse(localStorage.getItem('game42.grid') || '[]');
+    return list.filter((x) => x && x.kind === 'key' && x.kappaRaw)
+      .map((x) => ({ name: x.name || 'key', kappaRaw: String(x.kappaRaw).replace('sha256:', '') }));
+  } catch (e) { return []; }
+}
+
 function renderNodeEditor() {
   if (!selected) { nodeEditor.style.display = 'none'; return; }
   const game = getGame(active), s = byId[selected];
@@ -297,8 +307,14 @@ function renderNodeEditor() {
     `<button id="nLock">${lk ? '🔒 in run — click to remove' : '➕ add to run'}</button>`;
   if (active === 'mine') {
     const cur = (c.personaBySlot || {})[s.slotId] || '';
-    const opts = AXIS_ORDER.map((ax) => `<optgroup label="${ax}">` + MAGES_42[ax].map((k) => `<option value="${k}"${k === cur ? ' selected' : ''}>${personaGlyph(k)} ${personaName(k)}</option>`).join('') + `</optgroup>`).join('');
-    h += `<select id="ePersona"><option value="">&mdash; pick persona (6 &rarr; 42) &mdash;</option>${opts}</select>` +
+    const myKeys = readMyKeys();
+    // group 1 — agent personas (the 6 → 42 pool); group 2 — your keys (first person)
+    const agentOpts = AXIS_ORDER.map((ax) => `<optgroup label="agent · ${ax}">` + MAGES_42[ax].map((k) => `<option value="p:${k}"${(!keyAt && k === cur) ? ' selected' : ''}>${personaGlyph(k)} ${personaName(k)}</option>`).join('') + `</optgroup>`).join('');
+    const keyOpts = myKeys.length
+      ? `<optgroup label="key · first person (your keys)">` + myKeys.map((kx) => `<option value="key:${esc(kx.kappaRaw)}"${(keyAt && keyAt.kappa === kx.kappaRaw) ? ' selected' : ''}>🗝️ ${esc(kx.name)}</option>`).join('') + `</optgroup>`
+      : `<optgroup label="key · first person (your keys)"><option value="" disabled>— load a City Key on the grid first —</option></optgroup>`;
+    h += `<label class="ihint" style="margin-top:8px">seat this station — an agent persona, or your key (first person)</label>` +
+      `<select id="ePersona"><option value="">&mdash; empty &mdash;</option>${agentOpts}${keyOpts}</select>` +
       `<input id="eRole" placeholder="role in your words" value="${esc(roleOf(game, s))}">` +
       `<textarea id="eInfo" placeholder="information held at this node…">${esc((c.infoBySlot || {})[s.slotId] || '')}</textarea>` +
       `<div style="display:flex;gap:6px;flex-wrap:wrap"><button id="eKeyBtn">${keyAt ? 'replace' : 'attach'} key / json</button>${keyAt ? '<button id="eKeyClear">clear key</button>' : ''}</div>` +
@@ -313,7 +329,25 @@ function renderNodeEditor() {
     saveLocked(); reboard(); renderNodeEditor();
   });
   if (active === 'mine') {
-    nodeEditor.querySelector('#ePersona').addEventListener('change', (e) => { const cc = loadCustom(); cc.personaBySlot = cc.personaBySlot || {}; if (e.target.value) cc.personaBySlot[s.slotId] = e.target.value; else delete cc.personaBySlot[s.slotId]; saveCustom(cc); reboard(); renderNodeEditor(); });
+    nodeEditor.querySelector('#ePersona').addEventListener('change', (e) => {
+      const v = e.target.value;
+      const cc = loadCustom();
+      cc.personaBySlot = cc.personaBySlot || {};
+      cc.keyBySlot = cc.keyBySlot || {};
+      // one occupant per station: an agent persona OR your key (first person)
+      if (v.startsWith('key:')) {
+        const kk = v.slice(4);
+        const found = readMyKeys().find((x) => x.kappaRaw === kk);
+        cc.keyBySlot[s.slotId] = { name: found ? found.name : 'key', kappa: kk };
+        delete cc.personaBySlot[s.slotId];
+      } else if (v.startsWith('p:')) {
+        cc.personaBySlot[s.slotId] = v.slice(2);
+        delete cc.keyBySlot[s.slotId];
+      } else {
+        delete cc.personaBySlot[s.slotId];
+      }
+      saveCustom(cc); reboard(); renderNodeEditor();
+    });
     nodeEditor.querySelector('#eRole').addEventListener('input', (e) => { const cc = loadCustom(); cc.roles = cc.roles || {}; cc.roles[s.slotId] = e.target.value; saveCustom(cc); document.getElementById('legend').innerHTML = buildLegend(getGame('mine')); });
     nodeEditor.querySelector('#eInfo').addEventListener('input', (e) => { const cc = loadCustom(); cc.infoBySlot = cc.infoBySlot || {}; cc.infoBySlot[s.slotId] = e.target.value; saveCustom(cc); });
     nodeEditor.querySelector('#eKeyBtn').addEventListener('click', () => nodeEditor.querySelector('#eKeyFile').click());
@@ -372,8 +406,8 @@ render();
 const INTRO = [
   { k: 'the game of 42', t: 'A shared key to understanding', b: 'Six home bases each grow a heptad of seven — six × seven = forty-two governance positions. Filling them builds one group identity you can carry.' },
   { k: 'six roots', t: 'The six axes', b: 'compute · connection · delegation · protection · memory · value — the six dimensions of the privacy value model. Each is a heptad you grow.' },
-  { k: 'seven stations', t: 'head · heart · hands', b: 'Each heptad is the seven non-empty mixes of head / heart / hands (also soil / soul / society): three advisors, three builders, one keystone guide.' },
-  { k: 'three callings', t: 'fish · mice · guide', b: '🐟 vision fish scout the questions, 🐭 mice build the answers, 🧙 the privacy guide closes the heptad and holds the seed.' },
+  { k: 'seven stations', t: 'three shapes per heptad', b: 'Each heptad of seven has three who scout, three who build, and one keystone who closes it and holds the seed. The shapes are fixed; who fills them is open.' },
+  { k: 'who fills it', t: 'an agent, a person, or you', b: 'Every station is a trust task: you seat an actor and hold what matters against it — an AI agent, another person, or yourself. A guide can seat any kind of actor; the City of Mages is just the first such game.' },
   { k: 'fill & fold', t: 'Trust → seal', b: 'Each slot fills by a trust task → a relationship credential → a κ. When all six heptads lock, the board folds into your star and seals into one shareable key.' },
   { k: 'your game', t: 'Edit it into your language', b: 'Build each node — persona, role, info, even an imported key — then watch it fold on the territory, and meet other games on the constellation and grid.' },
 ];

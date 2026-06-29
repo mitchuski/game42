@@ -19,7 +19,12 @@
   .mark{font:700 40px/1 ui-monospace,monospace;letter-spacing:.04em;margin-bottom:8px}
   .mark .s{color:var(--sword)} .mark .m{color:var(--accent)}
   h1{margin:0;font:600 clamp(30px,6vw,46px)/1.05 Fraunces,Georgia,serif}
-  .dek{margin:9px 0 28px;color:var(--dim);max-width:46ch;font-style:italic}
+  .dek{margin:9px 0 16px;color:var(--dim);max-width:52ch;font-style:italic}
+  .loop{margin:0 0 26px;display:flex;flex-wrap:wrap;gap:6px 9px;justify-content:center;align-items:center;
+    color:var(--dim);font-size:11px;max-width:54ch}
+  .loop b{color:var(--ink);font-weight:600}
+  .loop .ar{color:rgba(255,255,255,.28)}
+  .loop .again{color:var(--accent)}
 
   /* the one action */
   .start{display:inline-flex;align-items:center;justify-content:center;gap:11px;
@@ -51,12 +56,18 @@
   <main class="wrap">
     <div class="mark"><span class="s">4</span><span class="m">2</span></div>
     <h1>The Game of 42</h1>
-    <p class="dek">six axes &times; seven faculty stations fold into a star tetrahedron &mdash; a
-      sealed game is one trust-graph node.</p>
+    <p class="dek">The game is always on &mdash; you live in it at many magnifications: a node, a board
+      of forty-two, a constellation of boards. Each board is a governance assembly for the guides
+      you&rsquo;re part of.</p>
+    <div class="loop" aria-label="the progression">
+      <b>choose 6</b><span class="ar">&rarr;</span><b>fill 42</b><span class="ar">&rarr;</span>
+      <b>capture</b><span class="ar">&rarr;</span><b>assign to a constellation</b>
+      <span class="ar">&rarr;</span><span class="again">again &#8635;</span>
+    </div>
 
     <a class="start" href="./map.html?start">
       <span class="ic">&#9654;</span>
-      <span>Start Game<span class="sub">name your six roots &middot; fill the board</span></span>
+      <span>Start Game<span class="sub">choose six roots &middot; fill &middot; capture &middot; assign &middot; again</span></span>
     </a>
 
     <blockquote class="spell" aria-label="the Emergence Spell">

@@ -169,7 +169,7 @@ function rebuild(spread) {
 }
 
 // ---- params + controls ----------------------------------------------------
-const params = { spin: 0, focus: false, spread: 1.8, lit: 42, star: true, threads: true, wave: true, fromGrid: false, coreFlow: true, minDist: 2, maxDist: 140, startDist: 12 };
+const params = { spin: 0, focus: false, spread: 1.8, lit: 42, star: true, threads: true, wave: true, fromGrid: true, coreFlow: true, minDist: 2, maxDist: 140, startDist: 12 };
 let mySpin = 0.08;
 let keyShell = null;
 rebuild(params.spread);
@@ -353,3 +353,15 @@ $('fKey').addEventListener('change', (e) => {
   r.readAsArrayBuffer(f);
   e.target.value = '';
 });
+
+// the constellation lights from the progression of assignment — as games are
+// assigned on the grid (game42.constellation), their fractal regions light up.
+// live-follow when the assignment changes in another tab.
+function relightFromCollection() {
+  litParents = readAssign();
+  if (params.fromGrid) $('sGames').textContent = litParents.size;
+}
+addEventListener('storage', (e) => {
+  if (e.key === 'game42.constellation' || e.key === null) relightFromCollection();
+});
+relightFromCollection();

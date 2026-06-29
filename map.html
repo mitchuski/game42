@@ -30,7 +30,10 @@
   #runFills{background:rgba(56,189,248,.16);border-color:rgba(56,189,248,.4)}
   #rightcol{display:flex;flex-direction:column;gap:18px}
   .ed label{display:block;color:var(--dim);font-size:10px;text-transform:uppercase;letter-spacing:.08em;margin:9px 0 3px}
-  .ed input,.ed select,.ed textarea{width:100%;margin-top:6px;background:rgba(0,0,0,.25);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font:12px/1.4 ui-monospace,monospace}
+  .ed input,.ed select,.ed textarea{width:100%;margin-top:6px;background:#0e1320;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font:12px/1.4 ui-monospace,monospace}
+  /* dark-theme native dropdown — colour the popped option list too */
+  select option,select optgroup{background:#11151f;color:var(--ink)}
+  select optgroup{color:var(--dim);font-style:normal}
   .ed textarea{min-height:54px;resize:vertical}
   .ed button{margin-top:7px;font:inherit;color:var(--ink);background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer}
   .ed button:hover{background:rgba(255,255,255,.1)}
