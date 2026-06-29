@@ -233,10 +233,39 @@ function buildEditor(c) {
 
 const nodeEditor = document.getElementById('nodeEditor');
 
+// The six lead slots (fillOrder 1 of each axis) — the tutorial's "first six roots".
+const LEAD_SLOTS = AXIS_ORDER.map((a) => SLOTS_BY_AXIS[a].find((s) => s.fillOrder === 1)).filter(Boolean);
+
+// On-board tutorial: guide my42 through its six roots, then release to freeflow.
+// (The per-node "what's important here?" prompt + lock already live in the editor.)
+function renderTutor() {
+  const el = document.getElementById('tutor');
+  if (!el) return;
+  if (active !== 'mine') { el.style.display = 'none'; return; }
+  el.style.display = '';
+  const done = LEAD_SLOTS.filter((s) => locked.has(s.slotId)).length;
+  const next = LEAD_SLOTS.find((s) => !locked.has(s.slotId));
+  if (next) {
+    const g = getGame('mine');
+    const axisLabel = (g.axisLabels && g.axisLabels[next.axisId]) || next.axisId;
+    el.innerHTML =
+      `<b>tutorial</b> · fill your six roots — <b>${done}/6</b> · ` +
+      `next: <a href="#" data-slot="${next.slotId}" style="color:var(--accent)">the ${esc(axisLabel)} root &rarr;</a> ` +
+      `<span style="color:var(--dim)">click it, say what's important, lock it</span>`;
+    const a = el.querySelector('a[data-slot]');
+    if (a) a.addEventListener('click', (e) => { e.preventDefault(); selected = next.slotId; reboard(); renderNodeEditor(); });
+  } else {
+    el.innerHTML =
+      `<b>tutorial</b> · your six roots are set &#10003; &mdash; <b>freeflow</b>: fill any slot in any order; ` +
+      `the board seals when all six heptads lock.`;
+  }
+}
+
 function reboard() {
   const g = getGame(active);
   document.getElementById('board').innerHTML = buildBoard(g);
   attachHandlers(g);
+  renderTutor();
 }
 function attachHandlers() {
   document.querySelectorAll('.nodec').forEach((gEl) => {
@@ -248,6 +277,7 @@ function refreshViews(game) {
   document.getElementById('legend').innerHTML = buildLegend(game);
   attachHandlers();
   renderNodeEditor();
+  renderTutor();
 }
 
 function renderNodeEditor() {
@@ -445,6 +475,17 @@ function renderJoin() {
 }
 
 function showIntro() { renderSplash(); introWrap.classList.add('show'); }
+// open the intro overlay straight at a given screen (used by the menu deep-links)
+function openIntroAt(fn) { fn(); introWrap.classList.add('show'); }
 const introLink = document.getElementById('introLink');
 if (introLink) introLink.addEventListener('click', (e) => { e.preventDefault(); showIntro(); });
-try { if (!localStorage.getItem('game42.intro.seen')) showIntro(); } catch (e) {}
+
+// Front-door interoperability: the landing menu (index.html) deep-links here —
+//   ?start → name-your-game (renderCreate)   ·   ?join → import (renderJoin)
+// Otherwise show the splash on a first-ever visit.
+try {
+  const q = new URLSearchParams(location.search);
+  if (q.has('start')) openIntroAt(renderCreate);
+  else if (q.has('join')) openIntroAt(renderJoin);
+  else if (!localStorage.getItem('game42.intro.seen')) showIntro();
+} catch (e) {}
