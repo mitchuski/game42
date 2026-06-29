@@ -5,7 +5,7 @@
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { SLOTS, AXIS_ORDER, AXIS_BY_ID, bootAssert } from './data.js';
-import { createGame, nextAction } from './flow.js';
+import { createGame, nextAction, applySealed } from './flow.js';
 import { buildBoard } from './geometry.js';
 import { buildStar } from './star.js';
 import { buildExtras, update as updateVisuals } from './visuals.js';
@@ -128,6 +128,26 @@ const visHept = Object.fromEntries(AXIS_ORDER.map((a) => [a, 0]));
 
 // ---- game state (mutable; reset replaces it) -----------------------------
 let game = createGame(SLOTS, AXIS_ORDER);
+
+// ---- follow the Map's fills --------------------------------------------------
+// The Map (map.html) writes its locked/lit slots to localStorage as
+// `game42.locked`; the Territory mirrors them so filling a slot on the board
+// folds the star here. One-way mirror (Map → Territory); auto-play still
+// explores locally. `updateHUD` is hoisted, so it is safe to call now.
+const LOCKED_KEY = 'game42.locked';
+function loadLockedSlots() {
+  try { const v = JSON.parse(localStorage.getItem(LOCKED_KEY) || '[]'); return Array.isArray(v) ? v : []; }
+  catch (e) { return []; }
+}
+function syncFromMap(rebuild) {
+  const locked = loadLockedSlots();
+  if (rebuild) game = createGame(SLOTS, AXIS_ORDER);
+  applySealed(game, locked);
+  updateHUD();
+}
+syncFromMap(false); // seed from whatever the Map has locked
+// fires when the Map (another tab) changes its fills
+window.addEventListener('storage', (e) => { if (e.key === LOCKED_KEY) syncFromMap(true); });
 
 // ---- params (dev controls) ----------------------------------------------
 const params = { thetaMax: 70, twist: 138, breathe: 0.05, spin: 0.18, star: true, starSize: 1.0, coreSpiral: true, reduced: false, manual: false, manualP: 0, focus: false, starMode: 'facet' };

@@ -125,6 +125,21 @@ export function createGame(slots, axisOrder) {
   };
 }
 
+// applySealed — mirror an external "locked" set (the Map's `game42.locked`) onto
+// this game's state: mark each named slot sealed and ignite its heptad, so the
+// fold (p / heptadFold / the `live` flag) reflects the board filled elsewhere.
+// Visualisation only — it bypasses the gates because it is reflecting, not playing.
+export function applySealed(game, slotIds) {
+  const set = new Set(slotIds);
+  for (const s of game.slots) {
+    if (set.has(s.slotId)) {
+      game.state[s.slotId] = 'sealed';
+      game.ignited[s.axisId] = true;
+    }
+  }
+  return game;
+}
+
 // nextAction — the deterministic driver used by Step / Auto-play. Returns the
 // single legal event that advances the game by the smallest honest increment,
 // in fill order across heptads (so gates always pass). Returns null when sealed.

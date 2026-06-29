@@ -31,14 +31,19 @@ export const GAMES = {
   },
 };
 
-export const GAME_ORDER = ['fish', 'mice', 'mages', 'mine'];
+// The quick-toggle offers two: `mages` (a complete state example) and `mine`
+// (my42 — start fresh in your own language). fish/mice stay defined above as
+// loadable example canons (the load screen), so each persona builds from start.
+export const GAME_ORDER = ['mages', 'mine'];
 export const DEFAULT_GAME = 'mages';
 
 const KEY = 'game42.preset';
 const CKEY = 'game42.custom';
 
 export function loadPreset() {
-  try { const v = localStorage.getItem(KEY); if (v && (GAMES[v] || v === 'mine')) return v; } catch (e) {}
+  // Only the two toggle options resolve from storage now; a previously-saved
+  // fish/mice falls back to the complete example so the toggle stays consistent.
+  try { const v = localStorage.getItem(KEY); if (v === 'mages' || v === 'mine') return v; } catch (e) {}
   return DEFAULT_GAME;
 }
 export function savePreset(id) {

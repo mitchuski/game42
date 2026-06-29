@@ -15,27 +15,35 @@
       radial-gradient(900px 540px at 50% -8%, #131826 0%, var(--bg) 62%) fixed, var(--bg);
     color:var(--ink);font:13px/1.6 ui-monospace,"Spline Sans Mono",SFMono-Regular,Menlo,Consolas,monospace}
   .wrap{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
-    text-align:center;padding:32px 20px;gap:6px}
-  .mark{font:700 40px/1 ui-monospace,monospace;letter-spacing:.04em;margin-bottom:6px}
+    text-align:center;padding:40px 20px;gap:0}
+  .mark{font:700 40px/1 ui-monospace,monospace;letter-spacing:.04em;margin-bottom:8px}
   .mark .s{color:var(--sword)} .mark .m{color:var(--accent)}
   h1{margin:0;font:600 clamp(30px,6vw,46px)/1.05 Fraunces,Georgia,serif}
-  .dek{margin:8px 0 30px;color:var(--dim);max-width:46ch;font-style:italic}
-  .menu{display:flex;flex-direction:column;gap:14px;width:min(340px,90vw)}
-  .menu a.primary{display:flex;align-items:center;justify-content:center;gap:10px;
-    text-decoration:none;color:var(--ink);font:600 16px/1 Fraunces,Georgia,serif;
-    padding:16px 18px;border-radius:14px;border:1px solid var(--line);
-    background:rgba(255,255,255,.04);transition:.18s}
-  .menu a.start{border-color:rgba(56,189,248,.4);background:rgba(56,189,248,.12)}
-  .menu a.start:hover{background:rgba(56,189,248,.2);transform:translateY(-1px)}
-  .menu a.join{border-color:rgba(224,165,38,.4);background:rgba(224,165,38,.1)}
-  .menu a.join:hover{background:rgba(224,165,38,.18);transform:translateY(-1px)}
-  .menu a .ic{font:400 18px/1 ui-monospace,monospace}
-  .menu a .sub{font:400 11px/1 ui-monospace,monospace;color:var(--dim)}
-  .pagenav{margin-top:34px;display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+  .dek{margin:9px 0 28px;color:var(--dim);max-width:46ch;font-style:italic}
+
+  /* the one action */
+  .start{display:inline-flex;align-items:center;justify-content:center;gap:11px;
+    text-decoration:none;color:var(--ink);font:600 17px/1 Fraunces,Georgia,serif;
+    padding:18px 30px;border-radius:14px;border:1px solid rgba(56,189,248,.45);
+    background:rgba(56,189,248,.13);transition:.18s;min-width:min(300px,86vw)}
+  .start:hover{background:rgba(56,189,248,.22);transform:translateY(-1px)}
+  .start .ic{font:400 19px/1 ui-monospace,monospace}
+  .start .sub{display:block;margin-top:5px;font:400 11px/1 ui-monospace,monospace;color:var(--dim)}
+
+  /* the invitation — the right people arrive (emergence, not recruitment) */
+  .spell{margin:30px auto 0;max-width:42ch;color:var(--dim);font-style:italic;line-height:1.75}
+  .spell .lead{color:var(--ink)}
+  .spell cite{display:block;margin-top:9px;font-style:normal;font-size:10.5px;color:var(--dim);
+    letter-spacing:.14em;text-transform:uppercase}
+  .invite{display:inline-block;margin-top:18px;color:var(--accent);text-decoration:none;font-size:12px;
+    border-bottom:1px solid rgba(56,189,248,.3)}
+  .invite:hover{border-color:var(--accent)}
+
+  .pagenav{margin-top:36px;display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
   .pagenav a{color:var(--dim);text-decoration:none;font-size:12px;border:1px solid var(--line);
     padding:3px 12px;border-radius:20px}
   .pagenav a:hover{color:var(--ink);border-color:rgba(255,255,255,.28)}
-  .foot{margin-top:26px;color:var(--dim);font-size:11px;max-width:52ch}
+  .foot{margin-top:24px;color:var(--dim);font-size:11px;max-width:52ch}
   .foot a{color:var(--accent);text-decoration:none}
 </style>
 </head>
@@ -46,16 +54,18 @@
     <p class="dek">six axes &times; seven faculty stations fold into a star tetrahedron &mdash; a
       sealed game is one trust-graph node.</p>
 
-    <nav class="menu" aria-label="Start">
-      <a class="primary start" href="./territory.html">
-        <span class="ic">&#9654;</span>
-        <span>Start Game<br><span class="sub">ignite the six roots &middot; fold the star</span></span>
-      </a>
-      <a class="primary join" href="./grid.html">
-        <span class="ic">&#8623;</span>
-        <span>Join Game<br><span class="sub">load a game from a PNG or wiki</span></span>
-      </a>
-    </nav>
+    <a class="start" href="./territory.html">
+      <span class="ic">&#9654;</span>
+      <span>Start Game<span class="sub">ignite the six roots &middot; fold the star</span></span>
+    </a>
+
+    <blockquote class="spell" aria-label="the Emergence Spell">
+      <span class="lead">The right people arrive.</span> The right moment happens. The right ending
+      closes. Trust the pattern, for it trusts you.
+      <cite>the Emergence Spell &middot; you do not recruit a game, you open one</cite>
+    </blockquote>
+
+    <a class="invite" href="./grid.html">received an invitation? arrive at a game &rarr;</a>
 
     <nav class="pagenav" aria-label="All views">
       <a href="./map.html">map</a>

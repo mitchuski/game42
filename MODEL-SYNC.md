@@ -30,6 +30,8 @@ Four of the six roots are the canonical Four Forces. The fill is a constellation
 
 **Collapse as a game rule.** The board reaches `sealed` only when all six heptads lock. Any incomplete heptad keeps the board open. This is Φ_v5 -> 0 on any axis, made into a gate, not a metaphor. See GAME-FLOW.md section 3.
 
+> **Live instrument.** This is the **three-axis gate (C7)** on [agentprivacy.ai/model/atlas](https://agentprivacy.ai/model/atlas): drag any axis to zero and the product `Φ_v5 = Φ_agent · Φ_data · Φ_inference` collapses. The board-seal rule is that gate made into a board — an incomplete heptad is an axis held below the gate.
+
 The inference mapping is the strongest new fit: vision fish are the Generator, mice are the Solver, and their separation is already required by the fill order. Privacy by construction, on every heptad.
 
 ---
@@ -56,6 +58,8 @@ This is the reason the Game of 42 records an ordered event log and not just an e
 
 The fold is that path made visible. As the ordered fills accumulate, the lattice folds by golden angle into the star. The fold is the trajectory, not the destination. GAME-FLOW.md section 6 makes the event log the canonical artifact for this reason; GEOMETRY.md drives the fold from the count of sealed slots, which is the integral of the path so far.
 
+> **Live instrument.** `T_∫(π)` is the path/phase family on the model atlas; its built prototype is the soulbis star ([soulbis.com/star](https://soulbis.com/star)), which walks "the dance, not the stance." The territory fold is the same path integral — value accruing along the trajectory, not at any single filled slot.
+
 The model also grounds this in time: privacy unfolds in time, a boundary sufficient last year is porous this year. The game inherits this through the integrity gate h(τ): a slot advances only while its evidence holds.
 
 ---
@@ -71,6 +75,21 @@ The model's holographic result: the 96-edge boundary encodes the 64-vertex bulk,
 The Game of 42 embodies the principle, not the specific 96/64 count. The group seal is computed over the boundary (the forty-two kappa-labels, which are the promise edges) plus the folded geometry hash. The boundary suffices to identify the whole game. You never hash the interior states; the edge-labels and the fold are enough. That is boundary-encodes-bulk at game scale.
 
 **[Conjectural, ~0.55]** The game's 42 is the 6 axes times 7 faculty stations product subset. The constructive-cone identity 1+6+15+20=42 is a second numerical route to 42. Neither is the holographic 96/64 object; the shared principle is boundary sufficiency, recorded as resonance.
+
+> **Live instrument.** `P^1.5` and the `96/64` ratio live in the conjecture register (C4) mirrored on the model atlas. The game records the kinship as **resonance (~0.55)**, not identity — boundary sufficiency is the shared principle, not the specific count.
+
+---
+
+## 4b. V6 — the moving ceiling: a sealed game is not timeless
+
+**[Architectural — the V6 layer]** The sections above align the game to the V5 equation, where a seal is a fixed guarantee. V6 adds the **moving ceiling** ([C82](https://agentprivacy.ai/model/atlas)): the person's entropy `H(X)` is fixed while adversarial capacity grows with frontier capability, so every static reconstruction guarantee carries a **shelf life t\* = sup{ t : R(t) < 1 }**.
+
+A sealed game of 42 is exactly such a static guarantee. So V6 says its seal is not timeless — it holds while `R(t) < 1`, and design should treat **re-keying as a first-class move**, not permanence. Two corollaries the V6 instruments make concrete:
+
+- **Existence-leak (C81).** Each public κ-label is an existence claim; even a sealed game leaks the κ that attests it was held. Disclosure has a floor.
+- **Compositional leakage (C83).** Chaining games without amnesia compounds toward `(2^N − 1)ε`; the event-log discipline (one ordered seal, no replayed interior) is the amnesia that caps it at `Nε`.
+
+This is an **addition**, not a correction: the V5 fold is unchanged; V6 just dates its shelf life. See the moving-ceiling, existence-leak, and compositional-leakage instruments on the atlas.
 
 ---
 
