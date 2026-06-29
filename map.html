@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<title>The Game of 42 — Map</title>
+<style>
+  :root{
+    --bg:#0B0E14; --ink:#e9ecf4; --dim:#8c95ad; --line:rgba(255,255,255,.10);
+    --glass:rgba(18,22,33,.72); --sword:#E0A526; --mage:#2563EB; --accent:#38BDF8;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);
+    font:13px/1.6 ui-monospace,"Spline Sans Mono",SFMono-Regular,Menlo,Consolas,monospace}
+  a{color:var(--accent)}
+  header{padding:20px 22px 8px}
+  header h1{margin:0;font:600 22px/1.1 Fraunces,Georgia,serif}
+  header p{margin:4px 0 0;color:var(--dim)}
+  .pagenav{margin-top:10px;display:flex;gap:8px}
+  .pagenav a{color:var(--dim);text-decoration:none;font-size:12px;border:1px solid var(--line);padding:3px 12px;border-radius:20px}
+  .pagenav a:hover{color:var(--ink);border-color:rgba(255,255,255,.28)}
+  .pagenav a.on{color:var(--ink);border-color:rgba(255,255,255,.34);background:rgba(255,255,255,.05)}
+  .seg{display:inline-flex;gap:5px;margin-top:10px}
+  .seg button{font:inherit;color:var(--ink);background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:9px;padding:5px 12px;cursor:pointer}
+  .seg button:hover{background:rgba(255,255,255,.1)}
+  .seg button.on{background:rgba(56,189,248,.16);border-color:rgba(56,189,248,.4)}
+  #clearFills,#runFills{font:inherit;color:var(--ink);background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:9px;padding:6px 12px;cursor:pointer}
+  #clearFills:hover,#runFills:hover{background:rgba(255,255,255,.1)}
+  #runFills{background:rgba(56,189,248,.16);border-color:rgba(56,189,248,.4)}
+  #rightcol{display:flex;flex-direction:column;gap:18px}
+  .ed label{display:block;color:var(--dim);font-size:10px;text-transform:uppercase;letter-spacing:.08em;margin:9px 0 3px}
+  .ed input,.ed select,.ed textarea{width:100%;margin-top:6px;background:rgba(0,0,0,.25);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font:12px/1.4 ui-monospace,monospace}
+  .ed textarea{min-height:54px;resize:vertical}
+  .ed button{margin-top:7px;font:inherit;color:var(--ink);background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer}
+  .ed button:hover{background:rgba(255,255,255,.1)}
+  .ed .imeta{color:var(--dim);font-size:11px;margin:4px 0 6px}
+  .ed .imeta b{color:var(--ink)}
+  .ed .ihint{color:var(--dim);font-size:10.5px;margin-top:7px}
+  .ed .chip{display:inline-block;margin:3px 5px 0 0;padding:1px 8px;border-radius:20px;border:1px solid var(--line);font-size:11px}
+  .ed .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle}
+  .ed .row2{display:flex;gap:6px;align-items:center;margin:4px 0}
+  .ed .row2 span{flex:0 0 84px;color:var(--dim);font-size:11px}
+  .ed .row2 input{flex:1;margin-top:0}
+  #detail input,#detail select,#detail textarea{width:100%;margin-top:7px;background:rgba(0,0,0,.25);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font:12px ui-monospace,monospace}
+  #detail textarea{min-height:54px;resize:vertical}
+  #detail button{margin-top:7px;font:inherit;color:var(--ink);background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer}
+  #detail button:hover{background:rgba(255,255,255,.1)}
+
+  main{display:grid;grid-template-columns:minmax(320px,1fr) minmax(340px,1.1fr);gap:18px;padding:14px 22px 60px;align-items:start}
+  @media(max-width:880px){ main{grid-template-columns:1fr} }
+
+  .panel{background:var(--glass);border:1px solid var(--line);border-radius:16px;padding:16px 18px}
+  #boardwrap{position:sticky;top:14px}
+  svg{width:100%;height:auto;display:block}
+  .nodec{cursor:pointer;transition:opacity .15s}
+  .nodec:hover{opacity:1 !important}
+  #detail{margin-top:12px;color:var(--dim);font-size:12px;min-height:42px}
+  #detail b{color:var(--ink)}
+  .chip{display:inline-block;margin:3px 5px 0 0;padding:1px 8px;border-radius:20px;border:1px solid var(--line);font-size:11px}
+
+  h2{font:600 11px/1 inherit;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin:0 0 10px}
+  .sec{margin-bottom:22px}
+  .steps{list-style:none;margin:0;padding:0;counter-reset:s}
+  .steps li{position:relative;padding:7px 0 7px 30px;border-top:1px solid var(--line)}
+  .steps li:first-child{border-top:none}
+  .steps li::before{counter-increment:s;content:counter(s);position:absolute;left:0;top:7px;width:20px;height:20px;
+    border:1px solid var(--line);border-radius:50%;text-align:center;line-height:20px;font-size:10px;color:var(--dim)}
+  .steps li b{color:var(--ink)}
+  .phase{display:flex;gap:8px;flex-wrap:wrap;margin:0}
+  .phase span{padding:3px 9px;border:1px solid var(--line);border-radius:20px;color:var(--dim);font-size:11.5px}
+  .phase span b{color:var(--ink);font-weight:600}
+  table{width:100%;border-collapse:collapse;font-size:11.5px}
+  th,td{text-align:left;padding:5px 6px;border-top:1px solid var(--line);vertical-align:top}
+  th{color:var(--dim);font-weight:600;text-transform:uppercase;letter-spacing:.08em;font-size:10px}
+  .dot{display:inline-block;width:9px;height:9px;border-radius:50%;vertical-align:middle;margin-right:5px}
+  .roots div{display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid var(--line);color:var(--dim)}
+  .roots div:first-child{border-top:none}
+  .roots b{color:var(--ink)}
+  .prov{color:var(--dim);font-style:italic;margin-top:8px}
+
+  /* intro — 6 simple screens */
+  .introwrap{position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;background:rgba(6,8,14,.88);backdrop-filter:blur(6px);padding:20px}
+  .introwrap.show{display:flex}
+  .introcard{max-width:440px;width:100%;background:var(--glass);border:1px solid var(--line);border-radius:18px;padding:26px 26px 18px;text-align:center}
+  .introcard .kick{color:var(--accent);font-size:11px;letter-spacing:.18em;text-transform:uppercase}
+  .introcard h2{font:600 24px/1.15 Fraunces,Georgia,serif;margin:8px 0 10px}
+  .introcard p{color:var(--dim);font-size:14px;line-height:1.6;margin:0 0 16px;min-height:96px}
+  .introdots{display:flex;gap:7px;justify-content:center;margin-bottom:16px}
+  .introdots i{width:8px;height:8px;border-radius:50%;background:var(--line);display:inline-block}
+  .introdots i.on{background:var(--accent)}
+  .introbtns{display:flex;gap:8px;align-items:center}
+  .introbtns button{font:inherit;color:var(--ink);background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:9px;padding:8px 16px;cursor:pointer}
+  .introbtns button.go{background:rgba(56,189,248,.18);border-color:rgba(56,189,248,.45)}
+  .introcard label{display:block;text-align:left;color:var(--dim);font-size:11px;margin-top:12px}
+  .introcard input{width:100%;margin-top:6px;background:rgba(0,0,0,.25);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:13px ui-monospace,monospace}
+  .introcard .big{display:flex;gap:10px;margin-top:16px}
+  .introcard .big button{flex:1;padding:14px 10px;font-size:14px}
+  .introcard .rootgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+  .introcard .rootgrid input{margin-top:0}
+  .introcard .muted{color:var(--dim);font-size:11px;margin-top:14px;cursor:pointer;text-decoration:underline}
+  @media(max-width:560px){ main{padding:12px 12px 60px} header{padding:14px 14px 6px} .introcard .big{flex-direction:column} .introcard .rootgrid{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+  <header>
+    <h1>The Game of 42 — Map</h1>
+    <p>the path that fills the territory &middot; six heptads, seven stations, one seal</p>
+    <nav class="pagenav"><a href="./index.html">menu</a><a href="./map.html" class="on">map</a><a href="./territory.html">territory</a><a href="./constellation.html">constellation</a><a href="./grid.html">grid</a><a href="#" id="introLink">intro</a></nav>
+    <div class="seg" id="preset"><button data-g="fish">&#128031; fish</button><button data-g="mice">&#128045; mice</button><button data-g="mages">&#129497; mages</button><button data-g="mine">&#9998; my42</button></div>
+    <div class="seg" id="view" style="margin-top:8px"><button data-v="groups" class="on">groups</button><button data-v="core">core</button><button data-v="spiral">spiral</button></div>
+    <div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <div class="seg" id="numbering"><button data-n="local" class="on">1&ndash;7</button><button data-n="global">1&ndash;42</button></div>
+      <button id="runFills">&#9654; run</button>
+      <button id="clearFills">clear</button>
+    </div>
+  </header>
+  <main>
+    <div class="panel" id="boardwrap">
+      <h2>the territory, in plan</h2>
+      <div id="board"></div>
+      <div id="detail">tap a station to edit it in the panel &rarr; &middot; lock nodes into the run</div>
+    </div>
+    <div id="rightcol">
+      <div class="panel ed" id="editor" style="display:none"></div>
+      <div class="panel ed" id="nodeEditor" style="display:none"></div>
+      <div class="panel" id="legend"></div>
+    </div>
+  </main>
+  <div class="introwrap" id="intro"><div class="introcard" id="introCard"></div></div>
+  <script type="module" src="/src/map.js"></script>
+</body>
+</html>

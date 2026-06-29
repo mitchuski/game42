@@ -8,6 +8,6 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
-    rollupOptions: { input: { map: 'index.html', territory: 'territory.html', constellation: 'constellation.html', grid: 'grid.html' } },
+    rollupOptions: { input: { menu: 'index.html', map: 'map.html', territory: 'territory.html', constellation: 'constellation.html', grid: 'grid.html' } },
   },
 });
