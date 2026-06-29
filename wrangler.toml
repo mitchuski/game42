@@ -1,0 +1,20 @@
+# Cloudflare Worker — serves the built Game of 42 as static assets.
+# The Worker has no script of its own; requests are served from ./dist
+# (Cloudflare Workers Static Assets). `npm run build` produces ./dist.
+#
+# Deploy:
+#   local         npm run build && npx wrangler deploy
+#   Workers Builds (git-connected)  build: npm run build · deploy: npx wrangler deploy
+#
+# `name` matches the existing Worker (game42.privacymage.workers.dev), so a
+# deploy UPDATES it rather than creating a new one. The custom domain
+# 42.agentprivacy.ai is already bound to this Worker.
+
+name = "game42"
+compatibility_date = "2024-12-30"
+
+[assets]
+directory = "./dist"
+# multi-page static site (real index/territory/constellation/grid .html files),
+# so leave not_found_handling at its default — do NOT use single-page-application
+# mode, which would rewrite every miss to index.html.
