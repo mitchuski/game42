@@ -123,6 +123,48 @@ function readAssign() {
 }
 let litParents = readAssign();
 
+// ---- assigned-game emoji glyphs: each assigned parent shows its game's glyph,
+// glowing at its anchor — so the grid assignment visibly "arrives" in the sky. ----
+const glyphGroup = new THREE.Group();
+world.add(glyphGroup);
+function emojiTexture(ch) {
+  const cv = document.createElement('canvas'); cv.width = cv.height = 128;
+  const ctx = cv.getContext('2d');
+  ctx.font = '82px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.shadowColor = 'rgba(255,255,255,0.95)'; ctx.shadowBlur = 20;
+  ctx.fillText(ch, 64, 70);
+  const t = new THREE.CanvasTexture(cv); t.needsUpdate = true; return t;
+}
+function cardEmojiMap() {
+  const map = {};
+  try {
+    const cards = JSON.parse(localStorage.getItem('game42.grid') || '[]');
+    for (const c of cards) if (c.kappaRaw) map[c.kappaRaw] = { emoji: c.emoji || '', kind: c.kind, name: c.name };
+  } catch (e) {}
+  return map;
+}
+function rebuildGlyphs() {
+  try {
+    while (glyphGroup.children.length) {
+      const o = glyphGroup.children.pop();
+      if (o.material) { if (o.material.map) o.material.map.dispose(); o.material.dispose(); }
+    }
+    if (!params.fromGrid) return;
+    const assign = JSON.parse(localStorage.getItem('game42.constellation') || '{}');
+    const cards = cardEmojiMap();
+    for (const sl in assign) {
+      const p = slotIndex[sl]; if (p === undefined) continue;
+      const card = cards[assign[sl]] || {};
+      const ch = card.emoji || (card.kind === 'key' ? '🗝️' : '🎴');
+      const spr = new THREE.Sprite(new THREE.SpriteMaterial({ map: emojiTexture(ch), transparent: true, depthWrite: false, depthTest: false }));
+      spr.position.copy(parentBase[p].clone().multiplyScalar(params.spread * 1.06));
+      spr.scale.setScalar(0.62); spr.userData.p = p;
+      glyphGroup.add(spr);
+    }
+  } catch (e) { window.__gerr && window.__gerr('glyphs: ' + (e && e.message || e)); }
+}
+
 // duo core flow (carried from the territory): the six keystone parents share back
 // and forth with the centre; a central glow brightens as they gather.
 const keyParents = SLOTS.map((s, i) => (s.isKeystone ? i : -1)).filter((i) => i >= 0);
@@ -249,6 +291,7 @@ function tick() {
       colBuf[i * 3 + 2] = baseColor[i * 3 + 2] * inten;
     }
     childGeo.attributes.color.needsUpdate = true;
+    glyphGroup.children.forEach((s) => { s.material.opacity = params.wave ? 0.78 + 0.22 * Math.max(0, Math.sin(t * 1.5 - s.userData.p * 0.5)) : 1; });
 
     anchors.visible = true;
     threads.visible = params.threads;
@@ -284,7 +327,7 @@ function tick() {
 tick();
 
 // ---- panel ----------------------------------------------------------------
-$('rSpread').addEventListener('input', (e) => { params.spread = parseFloat(e.target.value); rebuild(params.spread); });
+$('rSpread').addEventListener('input', (e) => { params.spread = parseFloat(e.target.value); rebuild(params.spread); rebuildGlyphs(); });
 $('rLit').addEventListener('input', (e) => { params.lit = parseInt(e.target.value); $('sGames').textContent = params.lit; });
 $('rSpin').addEventListener('input', (e) => { mySpin = parseFloat(e.target.value); });
 $('tStar').addEventListener('change', (e) => { params.star = e.target.checked; });
@@ -294,6 +337,7 @@ $('tGrid').addEventListener('change', (e) => {
   params.fromGrid = e.target.checked;
   if (params.fromGrid) { litParents = readAssign(); $('sGames').textContent = litParents.size; }
   else $('sGames').textContent = params.lit;
+  rebuildGlyphs();
 });
 $('tFlow').addEventListener('change', (e) => { params.coreFlow = e.target.checked; });
 $('starMode').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
@@ -360,8 +404,12 @@ $('fKey').addEventListener('change', (e) => {
 function relightFromCollection() {
   litParents = readAssign();
   if (params.fromGrid) $('sGames').textContent = litParents.size;
+  rebuildGlyphs();
 }
 addEventListener('storage', (e) => {
-  if (e.key === 'game42.constellation' || e.key === null) relightFromCollection();
+  if (e.key === 'game42.constellation' || e.key === 'game42.grid' || e.key === null) relightFromCollection();
 });
+// same-tab navigation / emoji edits in a hidden tab: re-read when we regain focus
+addEventListener('visibilitychange', () => { if (!document.hidden) relightFromCollection(); });
+addEventListener('focus', relightFromCollection);
 relightFromCollection();

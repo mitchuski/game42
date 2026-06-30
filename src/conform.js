@@ -13,7 +13,7 @@ export function conformImport(cfg) {
 
   // City-Key style projection: lit vertices must be A1 axis vertices; bitmask must agree
   if (Array.isArray(cfg.lit)) {
-    for (const v of cfg.lit) if (!VALID_VERTS.has(v)) w.push(`lit vertex ${v} is not an A1 axis vertex`);
+    for (const v of cfg.lit) if (!VALID_VERTS.has(v)) w.push(`lights vertex ${v}, outside the six axes — a freely-walked City Key, not a sealed Game-of-42 projection (those light only 1·2·4·8·16·32 + apex 63)`);
     if (cfg.source && typeof cfg.source.axisBitmask === 'number') {
       const m = cfg.lit.filter((v) => v !== 63).reduce((a, b) => a | b, 0);
       if (m !== cfg.source.axisBitmask) w.push(`axisBitmask ${cfg.source.axisBitmask} ≠ OR(lit) ${m}`);

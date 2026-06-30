@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<title>The Game of 42 — Flower</title>
+<style>
+  :root{
+    --bg:#0B0E14; --ink:#e9ecf4; --dim:#8c95ad; --line:rgba(255,255,255,.10);
+    --glass:rgba(18,22,33,.72); --sword:#E0A526; --mage:#2563EB; --accent:#38BDF8;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);
+    font:13px/1.6 ui-monospace,"Spline Sans Mono",SFMono-Regular,Menlo,Consolas,monospace}
+  a{color:var(--accent)}
+  header{padding:20px 22px 8px}
+  header h1{margin:0;font:600 22px/1.1 Fraunces,Georgia,serif}
+  header p{margin:4px 0 0;color:var(--dim)}
+  .pagenav{margin-top:10px;display:flex;flex-wrap:wrap;gap:8px}
+  .pagenav a{color:var(--dim);text-decoration:none;font-size:12px;border:1px solid var(--line);padding:3px 12px;border-radius:20px}
+  .pagenav a:hover{color:var(--ink);border-color:rgba(255,255,255,.28)}
+  .pagenav a.on{color:var(--ink);border-color:rgba(255,255,255,.34);background:rgba(255,255,255,.05)}
+  .seg{display:inline-flex;gap:5px;margin-top:10px}
+  .seg button{font:inherit;color:var(--ink);background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:9px;padding:5px 12px;cursor:pointer}
+  .seg button:hover{background:rgba(255,255,255,.1)}
+  .seg button.on{background:rgba(56,189,248,.16);border-color:rgba(56,189,248,.4)}
+
+  main{display:grid;grid-template-columns:minmax(320px,1.2fr) minmax(320px,1fr);gap:18px;padding:14px 22px 60px;align-items:start}
+  @media(max-width:880px){ main{grid-template-columns:1fr} }
+
+  .panel{background:var(--glass);border:1px solid var(--line);border-radius:16px;padding:16px 18px}
+  #flowerwrap{position:sticky;top:14px}
+  svg{width:100%;height:auto;display:block;overflow:visible}
+  h2{font:600 11px/1 inherit;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin:0 0 10px}
+
+  .petal{cursor:pointer;transition:opacity .18s;outline:none;-webkit-tap-highlight-color:transparent}
+  .petal:focus,.petal:focus-visible{outline:none}
+  .petal:hover{filter:brightness(1.12)}
+  .petal.sel{filter:drop-shadow(0 0 9px rgba(159,180,255,.5))}
+  .petal.sel path:last-of-type{stroke-width:2.4}
+  .glyph{font-size:26px;pointer-events:none;user-select:none}
+  .ringlabel{fill:var(--dim);font-size:9px;letter-spacing:.14em;text-transform:uppercase;pointer-events:none}
+  .magename{fill:var(--ink);font:600 12px Fraunces,Georgia,serif;pointer-events:none}
+
+  /* fold + progress strip */
+  .strip{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:12px 0 4px}
+  .prog{display:flex;align-items:center;gap:8px;color:var(--dim);font-size:12px}
+  .prog b{color:var(--ink)}
+  .pips{display:flex;gap:5px}
+  .pips i{width:9px;height:9px;border-radius:50%;background:var(--line);display:inline-block;transition:background .2s,box-shadow .2s}
+  .pips i.on{background:var(--accent);box-shadow:0 0 7px rgba(56,189,248,.7)}
+  .strip .foldlbl{color:var(--dim);font-size:11px;display:flex;align-items:center;gap:7px}
+  .strip input[type=range]{accent-color:var(--accent)}
+  .btn{font:inherit;color:var(--ink);background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:9px;padding:6px 12px;cursor:pointer}
+  .btn:hover{background:rgba(255,255,255,.1)}
+  .btn.go{background:rgba(56,189,248,.16);border-color:rgba(56,189,248,.4)}
+  .btn:disabled{opacity:.4;cursor:default}
+
+  /* editor */
+  .ed label{display:block;color:var(--dim);font-size:10px;text-transform:uppercase;letter-spacing:.08em;margin:11px 0 0}
+  .ed input,.ed textarea{width:100%;margin-top:6px;background:#0e1320;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 9px;font:12px/1.4 ui-monospace,monospace}
+  .ed textarea{min-height:60px;resize:vertical}
+  .ed .row{display:flex;gap:8px;margin-top:8px}
+  .ed .row .btn{flex:1}
+  .ed .dot{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:7px;vertical-align:middle}
+  .ed .hd{font:600 18px/1.2 Fraunces,Georgia,serif;color:var(--ink);display:flex;align-items:center;gap:6px}
+  .ed .hd .g{font-size:22px}
+  .ed .sub{color:var(--dim);font-size:11px;margin-top:3px}
+  .ed .hint{color:var(--dim);font-size:10.5px;margin-top:10px}
+  .ed .heptad{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+  .ed .heptad .h{color:var(--dim);font-size:10px;text-transform:uppercase;letter-spacing:.08em}
+  .ed .heptad .chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+  .ed .chip{padding:2px 9px;border:1px solid var(--line);border-radius:20px;font-size:11px;color:var(--dim)}
+  .ed .chip b{color:var(--ink);font-weight:600}
+  .ed .chip.key{border-color:rgba(56,189,248,.4);color:var(--ink)}
+
+  /* emoji picker popup */
+  .glyphpick{cursor:pointer;caret-color:transparent;text-align:center;font-size:18px}
+  .emojipop{position:fixed;z-index:80;width:272px;max-height:300px;overflow:auto;background:rgba(14,18,28,.92);
+    backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.16);border-radius:13px;padding:9px;
+    box-shadow:0 14px 40px rgba(0,0,0,.55)}
+  .emojipop .cat{color:var(--dim);font-size:9px;letter-spacing:.13em;text-transform:uppercase;margin:9px 4px 4px}
+  .emojipop .cat:first-child{margin-top:0}
+  .emojipop .grid{display:grid;grid-template-columns:repeat(8,1fr);gap:2px}
+  .emojipop .grid button{font-size:19px;line-height:1;background:none;border:0;border-radius:8px;padding:5px 0;cursor:pointer}
+  .emojipop .grid button:hover{background:rgba(159,180,255,.18)}
+  #legend .roots div{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--line);color:var(--dim)}
+  #legend .roots div:first-child{border-top:none}
+  #legend .roots b{color:var(--ink)}
+  #legend .roots .g{font-size:15px}
+  .prov{color:var(--dim);font-style:italic;margin-top:12px;font-size:12px}
+  .seedline{color:var(--dim);font-size:12px;margin:2px 0 0}
+  .seedline b{color:var(--ink)}
+  @media(max-width:560px){ main{padding:12px 12px 60px} header{padding:14px 14px 6px} }
+</style>
+</head>
+<body>
+  <header>
+    <h1>The Game of 42 — Flower</h1>
+    <p>the 6 + 1 compression &middot; choose the first six mages, fold the City closed</p>
+    <nav class="pagenav" aria-label="All views">
+      <a href="./index.html">menu</a>
+      <a href="./flower.html" class="on">flower</a>
+      <a href="./map.html">map</a>
+      <a href="./territory.html">territory</a>
+      <a href="./constellation.html">constellation</a>
+      <a href="./grid.html">grid</a>
+    </nav>
+    <div class="seg" id="preset"><button data-g="mages" class="on">&#129497; mages</button><button data-g="mine">&#9998; my42</button></div>
+  </header>
+  <main>
+    <div class="panel" id="flowerwrap">
+      <h2>the city, compressed to seven</h2>
+      <div id="flower"></div>
+      <div class="strip">
+        <div class="prog"><span>seated</span> <b id="count">0</b><span>/6</span>
+          <span class="pips" id="pips"></span></div>
+        <label class="foldlbl">fold
+          <input type="range" id="fold" min="0" max="100" value="0" />
+        </label>
+        <button class="btn" id="clear">clear</button>
+        <button class="btn" id="capture" disabled>&#128248; capture</button>
+        <button class="btn go" id="open" disabled>open the full 42 &rarr;</button>
+      </div>
+      <p class="seedline" id="seal">the seal waits on the seventh — fill all six and the centre lights</p>
+    </div>
+    <div id="rightcol">
+      <div class="panel ed" id="editor"></div>
+      <div class="panel" id="legend" style="margin-top:18px"></div>
+    </div>
+  </main>
+  <script type="module" src="/src/flower.js"></script>
+</body>
+</html>

@@ -24,7 +24,7 @@ export const GAMES = {
   mages: {
     id: 'mages', name: 'City of Mages', glyph: '🧙', accent: '#b98cff',
     tagline: 'the privacy game of 42',
-    axisLabels: { compute: 'learning', connection: 'network', delegation: 'agency', protection: 'privacy', memory: 'continuity', value: 'compliance' },
+    axisLabels: { compute: 'learning', connection: 'network', delegation: 'agency', protection: 'privacy', memory: 'continuity', value: 'trust' },
     classLabels: { vision_fish: 'oracle', mouse: 'artificer', privacy_guide: 'archmage' },
     igniteOrder: ['protection', 'delegation', 'memory', 'connection', 'compute', 'value'],
     personas: MAGES_42, // the real agentprivacy 42, per-station (proposed bijection)

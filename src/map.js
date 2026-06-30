@@ -45,7 +45,15 @@ const glyphFor = (game, s) => {
 
 let view = 'groups';
 let numbering = 'local';
+let mode = 'fill'; // 'fill' = seat the 42 by hand · 'merge' = seat other players' flowers at the 6 roots
 let selected = null; // slotId open in the right-panel node editor
+
+// merge store: each of the 6 roots may hold another player's whole flower, bound
+// by the A5 seam { name, glyph, seal, kappa, axisBitmask } only — never interior.
+const MERGE_KEY = 'game42.merge';
+function loadMerge() { try { return JSON.parse(localStorage.getItem(MERGE_KEY)) || {}; } catch (e) { return {}; } }
+function saveMerge(m) { try { localStorage.setItem(MERGE_KEY, JSON.stringify(m)); } catch (e) {} }
+let mergeTarget = null; // axisId awaiting a seated flower from the shared file input
 let litNow = null; // transient run set; null => render from `locked`
 const LOCKED_KEY = 'game42.locked';
 let locked = (() => { try { return new Set(JSON.parse(localStorage.getItem(LOCKED_KEY) || '[]')); } catch (e) { return new Set(); } })();
@@ -108,6 +116,10 @@ function buildBoard(game) {
     }
   }
 
+  // in merge mode the 42 recede so the 6 root-inserts read as the live layer
+  const merging = mode === 'merge';
+  svg += `<g opacity="${merging ? '.3' : '1'}">`;
+
   // glow halos — only lit (locked / running) stations
   svg += `<g filter="url(#ng)" opacity=".85">`;
   for (const s of SLOTS) if (isLit(s)) svg += `<circle cx="${X(s)}" cy="${Y(s)}" r="${(s.isKeystone ? 18 : 14) + 5}" fill="${axisColor(s.axisId)}"/>`;
@@ -136,6 +148,28 @@ function buildBoard(game) {
     const len = Math.hypot(X(key), Y(key)) || 1;
     const ox = (X(key) / len) * 96, oy = (Y(key) / len) * 96;
     svg += `<text x="${X(key) + ox}" y="${Y(key) + oy}" text-anchor="middle" dy=".34em" font-size="20" fill="#dfe6ff" font-family="Fraunces,Georgia,serif">${esc(game.axisLabels[a] || a)}${FORCE[a] ? ' ' + FORCE[a] : ''}</text>`;
+  }
+  svg += `</g>`; // close the dimming group
+
+  // merge overlay — six insert rings at the roots, each able to seat a flower
+  if (merging) {
+    const m = loadMerge();
+    for (const a of AXIS_ORDER) {
+      const key = SLOTS_BY_AXIS[a].find((s) => s.isKeystone);
+      const len = Math.hypot(X(key), Y(key)) || 1;
+      const ix = X(key) + (X(key) / len) * 80, iy = Y(key) + (Y(key) / len) * 80;
+      const s = m[a], col = axisColor(a);
+      svg += `<g class="mergeins" data-merge="${a}" style="cursor:pointer">`;
+      svg += `<line x1="${X(key)}" y1="${Y(key)}" x2="${ix}" y2="${iy}" stroke="${col}" stroke-opacity=".55" stroke-width="2" stroke-dasharray="3 5"/>`;
+      svg += `<circle cx="${ix}" cy="${iy}" r="36" fill="${s ? col : '#0b0e14'}" fill-opacity="${s ? '.22' : '.7'}" stroke="${col}" stroke-width="3"${s ? '' : ' stroke-dasharray="5 5"'}/>`;
+      if (s) {
+        svg += `<text x="${ix}" y="${iy - 5}" text-anchor="middle" font-size="24">${esc(s.glyph || '🌸')}</text>`;
+        svg += `<text x="${ix}" y="${iy + 15}" text-anchor="middle" font-size="9" fill="#cfe0ff" font-family="Fraunces,Georgia,serif">${esc((s.name || '').slice(0, 14))}</text>`;
+      } else {
+        svg += `<text x="${ix}" y="${iy}" text-anchor="middle" dy=".34em" font-size="30" fill="${col}">+</text>`;
+      }
+      svg += `</g>`;
+    }
   }
   return svg + `</svg>`;
 }
@@ -241,7 +275,7 @@ const LEAD_SLOTS = AXIS_ORDER.map((a) => SLOTS_BY_AXIS[a].find((s) => s.fillOrde
 function renderTutor() {
   const el = document.getElementById('tutor');
   if (!el) return;
-  if (active !== 'mine') { el.style.display = 'none'; return; }
+  if (mode === 'merge' || active !== 'mine') { el.style.display = 'none'; return; }
   el.style.display = '';
   const done = LEAD_SLOTS.filter((s) => locked.has(s.slotId)).length;
   const next = LEAD_SLOTS.find((s) => !locked.has(s.slotId));
@@ -268,6 +302,12 @@ function reboard() {
   renderTutor();
 }
 function attachHandlers() {
+  if (mode === 'merge') {
+    document.querySelectorAll('.mergeins').forEach((gEl) => {
+      gEl.addEventListener('click', () => mergeInsertClick(gEl.dataset.merge));
+    });
+    return;
+  }
   document.querySelectorAll('.nodec').forEach((gEl) => {
     gEl.addEventListener('click', () => { selected = gEl.dataset.slot; reboard(); renderNodeEditor(); });
   });
@@ -276,7 +316,7 @@ function refreshViews(game) {
   document.getElementById('board').innerHTML = buildBoard(game);
   document.getElementById('legend').innerHTML = buildLegend(game);
   attachHandlers();
-  renderNodeEditor();
+  if (mode === 'merge') renderMerge(); else renderNodeEditor();
   renderTutor();
 }
 
@@ -371,15 +411,80 @@ function renderNodeEditor() {
   }
 }
 
+// ---- merge: seat other players' flowers at the six roots -------------------
+function mergeMsg(html) { const el = document.getElementById('mMsg'); if (el) el.innerHTML = html; }
+function mergeInsertClick(a) {
+  const m = loadMerge();
+  if (m[a]) { mergeMsg(`${esc(m[a].glyph || '🌸')} <b>${esc(m[a].name)}</b> already seated here — release it in the panel to reseat.`); return; }
+  mergeTarget = a;
+  const fi = document.getElementById('mFile'); if (fi) fi.click();
+}
+function seatFromFile(file, axisId) {
+  const r = new FileReader();
+  r.onload = async () => {
+    let cfg = null;
+    try { cfg = pngExtract(r.result, 'game42') || pngExtract(r.result, 'cityKey'); if (!cfg) cfg = JSON.parse(new TextDecoder().decode(r.result)); } catch (x) { cfg = null; }
+    if (!cfg || typeof cfg !== 'object') { mergeMsg('⚠ no flower / game found in that file'); return; }
+    let kappa = cfg.kappa || cfg.seal;
+    if (!kappa) kappa = 'sha256:' + (await sha256hex(canonical(cfg)));
+    const seat = {
+      name: cfg.name || file.name.replace(/\.[a-z]+$/i, ''), glyph: cfg.glyph || '🌸',
+      kappa: String(kappa).replace('sha256:', ''), seal: String(cfg.seal || kappa).replace('sha256:', ''),
+      axisBitmask: typeof cfg.axisBitmask === 'number' ? cfg.axisBitmask : 63,
+    };
+    const m = loadMerge(); m[axisId] = seat; saveMerge(m);
+    refreshViews(getGame(active));
+    const label = getGame(active).axisLabels[axisId] || axisId;
+    mergeMsg(`🌸 seated <b>${esc(seat.name)}</b> at the <b>${esc(label)}</b> root — bound by κ ${esc(seat.kappa.slice(0, 8))} ${seat.axisBitmask === 63 ? '· a whole flower' : '· ' + countBits(seat.axisBitmask) + '/6'}`);
+  };
+  r.readAsArrayBuffer(file);
+}
+function countBits(n) { let c = 0; while (n) { c += n & 1; n >>= 1; } return c; }
+function renderMerge() {
+  document.getElementById('editor').style.display = 'none';
+  nodeEditor.style.display = '';
+  const m = loadMerge(), game = getGame(active);
+  const n = AXIS_ORDER.filter((a) => m[a]).length;
+  nodeEditor.innerHTML =
+    `<h2>seat another flower &middot; ${n}/6</h2>` +
+    `<p class="ihint">Each root can hold another player's whole flower — bound by its <b>seal &amp; κ</b> only (the canon seam), never its forty-two. Six seated flowers + you at the centre = the next magnification: a board of boards.</p>` +
+    AXIS_ORDER.map((a) => {
+      const ax = AXIS_BY_ID[a], s = m[a], label = game.axisLabels[a] || a;
+      return `<div class="mrow"><span class="dot" style="background:${ax.colour}"></span><b>${esc(label)}</b>` +
+        (s
+          ? `<span class="chip">${esc(s.glyph || '🌸')} ${esc(s.name)}</span><span class="chip">κ ${esc((s.kappa || '').slice(0, 8))}</span><button class="mini" data-rel="${a}">release</button>`
+          : `<button class="mini go" data-seat="${a}">+ seat a flower</button>`) +
+        `</div>`;
+    }).join('') +
+    `<input id="mFile" type="file" accept="image/png,application/json" style="display:none">` +
+    `<div id="mMsg" class="ihint" style="min-height:16px;margin-top:9px"></div>` +
+    (n === 6 ? `<p class="ihint" style="color:#7be0b0">✦ all six seated — the circle is whole. Capture this board on the grid to carry it up a magnification.</p>` : '') +
+    `<p class="ihint">a flower comes from the <a href="./flower.html">flower</a> (📸 capture) — drop its PNG or JSON here.</p>` +
+    `<div style="display:flex;gap:6px;margin-top:10px"><button id="mSave">💾 save &amp; back to the board</button></div>`;
+  nodeEditor.querySelectorAll('[data-seat]').forEach((b) => b.addEventListener('click', () => mergeInsertClick(b.dataset.seat)));
+  nodeEditor.querySelectorAll('[data-rel]').forEach((b) => b.addEventListener('click', () => { const m2 = loadMerge(); delete m2[b.dataset.rel]; saveMerge(m2); refreshViews(getGame(active)); }));
+  const fi = nodeEditor.querySelector('#mFile');
+  fi.addEventListener('change', (e) => { const f = e.target.files[0]; if (f && mergeTarget) seatFromFile(f, mergeTarget); e.target.value = ''; });
+  nodeEditor.querySelector('#mSave').addEventListener('click', () => { saveMerge(loadMerge()); mode = 'fill'; selected = null; render(); });
+}
+
 function render() {
+  if (mode === 'merge') { document.getElementById('editor').style.display = 'none'; refreshViews(getGame(active)); syncToggles(); return; }
   if (active === 'mine') buildEditor(loadCustom());
   else document.getElementById('editor').style.display = 'none';
   refreshViews(getGame(active));
+  syncToggles();
+}
+function syncToggles() {
   document.querySelectorAll('#preset button').forEach((b) => b.classList.toggle('on', b.dataset.g === active));
+  document.querySelectorAll('#mode button').forEach((b) => b.classList.toggle('on', b.dataset.m === mode));
 }
 
 document.querySelectorAll('#preset button').forEach((b) =>
   b.addEventListener('click', () => { active = b.dataset.g; savePreset(active); selected = null; render(); })
+);
+document.querySelectorAll('#mode button').forEach((b) =>
+  b.addEventListener('click', () => { mode = b.dataset.m; selected = null; render(); })
 );
 document.querySelectorAll('#view button').forEach((b) =>
   b.addEventListener('click', () => { view = b.dataset.v; document.querySelectorAll('#view button').forEach((x) => x.classList.toggle('on', x.dataset.v === view)); refreshViews(getGame(active)); })
@@ -404,12 +509,12 @@ render();
 
 // ---- intro / login flow: start your own or join, then onto the board ------
 const INTRO = [
-  { k: 'the game of 42', t: 'A shared key to understanding', b: 'Six home bases each grow a heptad of seven — six × seven = forty-two governance positions. Filling them builds one group identity you can carry.' },
-  { k: 'six roots', t: 'The six axes', b: 'compute · connection · delegation · protection · memory · value — the six dimensions of the privacy value model. Each is a heptad you grow.' },
+  { k: 'the game of 42', t: 'A shared key to understanding', b: 'Six home bases each grow a heptad of seven — six × seven = forty-two governance positions, woven into one group identity you can carry.' },
+  { k: 'the first turn', t: 'Open with the flower', b: 'You begin at the flower: a 6 + 1 compression of the whole game. Choose the first six mages around one centre, name them, and fold the City closed. The flower is the whole forty-two in seed.' },
+  { k: 'six roots', t: 'The six axes', b: 'compute · connection · delegation · protection · memory · value — the six dimensions of the privacy value model. Each is a heptad you grow out from its mage.' },
   { k: 'seven stations', t: 'three shapes per heptad', b: 'Each heptad of seven has three who scout, three who build, and one keystone who closes it and holds the seed. The shapes are fixed; who fills them is open.' },
-  { k: 'who fills it', t: 'an agent, a person, or you', b: 'Every station is a trust task: you seat an actor and hold what matters against it — an AI agent, another person, or yourself. A guide can seat any kind of actor; the City of Mages is just the first such game.' },
+  { k: 'who fills it', t: 'an agent, a person, or you', b: 'Every station is a trust task: you seat an actor and hold what matters against it — an AI agent, another person, or yourself. The City of Mages is just the first such game.' },
   { k: 'fill & fold', t: 'Trust → seal', b: 'Each slot fills by a trust task → a relationship credential → a κ. When all six heptads lock, the board folds into your star and seals into one shareable key.' },
-  { k: 'your game', t: 'Edit it into your language', b: 'Build each node — persona, role, info, even an imported key — then watch it fold on the territory, and meet other games on the constellation and grid.' },
 ];
 const introWrap = document.getElementById('intro');
 const introCard = document.getElementById('introCard');
@@ -418,53 +523,40 @@ let learnIdx = 0;
 function introDone() { introWrap.classList.remove('show'); try { localStorage.setItem('game42.intro.seen', '1'); } catch (e) {} }
 function enterBoard() { active = 'mine'; savePreset('mine'); selected = null; introDone(); render(); }
 
+// the first step is the flower (choose & name the six); the map is where you
+// fill all forty-two. So "start" leaves the map and opens the flower.
+function toFlower() { window.location.href = './flower.html'; }
+
 function renderSplash() {
   introCard.innerHTML =
     `<div class="kick">the game of 42</div><h2>Start your game</h2>` +
-    `<p>Six home bases. Forty-two roles. One shared key. Begin your own game — or join one already in play.</p>` +
-    `<div class="big"><button id="iStart" class="go">⚔️ Start your own</button><button id="iJoin">🤝 Join a game</button></div>` +
+    `<p>Six home bases. Forty-two roles. One shared key. Begin at the flower — choose your first six — or join a game already in play.</p>` +
+    `<div class="big"><button id="iStart" class="go">🌸 Begin at the flower</button><button id="iJoin">🤝 Join a game</button></div>` +
     `<div class="muted" id="iLearn">how it works →</div>`;
-  introCard.querySelector('#iStart').addEventListener('click', renderCreate);
+  introCard.querySelector('#iStart').addEventListener('click', toFlower);
   introCard.querySelector('#iJoin').addEventListener('click', renderJoin);
   introCard.querySelector('#iLearn').addEventListener('click', () => { learnIdx = 0; renderLearn(); });
 }
 
 function renderLearn() {
   const s = INTRO[learnIdx];
+  const last = learnIdx === INTRO.length - 1;
   introCard.innerHTML =
     `<div class="kick">${esc(s.k)}</div><h2>${esc(s.t)}</h2><p>${esc(s.b)}</p>` +
     `<div class="introdots">${INTRO.map((_, i) => `<i class="${i === learnIdx ? 'on' : ''}"></i>`).join('')}</div>` +
-    `<div class="introbtns"><button id="iLback">back</button><span style="flex:1"></span><button id="iLnext" class="go">${learnIdx === INTRO.length - 1 ? 'start' : 'next'}</button></div>`;
+    `<div class="introbtns"><button id="iLback">back</button><span style="flex:1"></span><button id="iLnext" class="go">${last ? 'choose your six →' : 'next'}</button></div>`;
   introCard.querySelector('#iLback').addEventListener('click', () => { if (learnIdx > 0) { learnIdx--; renderLearn(); } else renderSplash(); });
-  introCard.querySelector('#iLnext').addEventListener('click', () => { if (learnIdx < INTRO.length - 1) { learnIdx++; renderLearn(); } else renderCreate(); });
-}
-
-function renderCreate() {
-  const c = loadCustom();
-  introCard.innerHTML =
-    `<div class="kick">start your own</div><h2>Name your game</h2>` +
-    `<label>your game</label><input id="cName" value="${esc(c.name)}" placeholder="my42">` +
-    `<label>your six home bases — the team</label>` +
-    `<div class="rootgrid">${AXIS_ORDER.map((a) => `<input data-r="${a}" value="${esc(c.axisLabels[a] || a)}" placeholder="${a}">`).join('')}</div>` +
-    `<div class="introbtns" style="margin-top:16px"><button id="cBack">back</button><span style="flex:1"></span><button id="cGo" class="go">enter the board →</button></div>`;
-  introCard.querySelector('#cBack').addEventListener('click', renderSplash);
-  introCard.querySelector('#cGo').addEventListener('click', () => {
-    const cc = loadCustom();
-    cc.name = introCard.querySelector('#cName').value || 'my42';
-    introCard.querySelectorAll('[data-r]').forEach((inp) => { cc.axisLabels[inp.dataset.r] = inp.value || inp.dataset.r; });
-    saveCustom(cc);
-    enterBoard();
-  });
+  introCard.querySelector('#iLnext').addEventListener('click', () => { if (last) toFlower(); else { learnIdx++; renderLearn(); } });
 }
 
 function renderJoin() {
   introCard.innerHTML =
-    `<div class="kick">join a game</div><h2>Join someone's game</h2>` +
-    `<p>Import a game-of-42 or City-Key shared with you — a PNG/JSON file, or a FedWiki page link.</p>` +
-    `<button id="jFileBtn" class="go" style="width:100%">choose a game / key file</button>` +
+    `<div class="kick">join a game</div><h2>Arrive at a shared game</h2>` +
+    `<p>Someone exported their Game of 42 and shared it with you. Load it here — their six mages and everything they filled come with it, so you can join their board.</p>` +
+    `<button id="jFileBtn" class="go" style="width:100%">📷 load an exported game (PNG or JSON)</button>` +
     `<input id="jFile" type="file" accept="image/png,application/json" style="display:none">` +
-    `<label style="display:block;text-align:left;color:var(--dim);font-size:11px;margin-top:12px">or join from a wiki link</label>` +
-    `<div style="display:flex;gap:6px;margin-top:6px"><input id="jWiki" type="text" placeholder="http://game42.localhost:3030/example-game--the-first-six"><button id="jWikiGo">fetch</button></div>` +
+    `<label style="display:block;text-align:left;color:var(--dim);font-size:11px;margin-top:14px">or paste the link to a game's page</label>` +
+    `<div style="display:flex;gap:6px;margin-top:6px"><input id="jWiki" type="text" placeholder="https://…/their-game-of-42"><button id="jWikiGo">load</button></div>` +
     `<div id="jMsg" style="color:var(--dim);font-size:11px;margin-top:10px;min-height:16px"></div>` +
     `<div class="introbtns" style="margin-top:14px"><button id="jBack">back</button><span style="flex:1"></span><button id="jGo" class="go" disabled style="opacity:.5">enter the board →</button></div>`;
   let adopted = false;
@@ -514,12 +606,13 @@ function openIntroAt(fn) { fn(); introWrap.classList.add('show'); }
 const introLink = document.getElementById('introLink');
 if (introLink) introLink.addEventListener('click', (e) => { e.preventDefault(); showIntro(); });
 
-// Front-door interoperability: the landing menu (index.html) deep-links here —
-//   ?start → name-your-game (renderCreate)   ·   ?join → import (renderJoin)
+// Front-door interoperability: deep-links arrive here —
+//   ?start → the flower already chose & named the six; land straight on the board
+//   ?join  → import a game (renderJoin)
 // Otherwise show the splash on a first-ever visit.
 try {
   const q = new URLSearchParams(location.search);
-  if (q.has('start')) openIntroAt(renderCreate);
+  if (q.has('start')) { try { localStorage.setItem('game42.intro.seen', '1'); } catch (e) {} }
   else if (q.has('join')) openIntroAt(renderJoin);
   else if (!localStorage.getItem('game42.intro.seen')) showIntro();
 } catch (e) {}

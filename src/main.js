@@ -15,8 +15,17 @@ import { pngEmbed, readKeyFile } from './pngkey.js';
 import { game42ToCityKey, kappaCity } from './citykey.js';
 import { BOARD_GRAPH, AXIS_GLYPH, TRIAD, theme, THEME_DEFAULTS } from './palette.js';
 import { GAMES, getGame, loadPreset, savePreset } from './presets.js';
+import { personaName, personaGlyph, magesPersonaKey } from './personas.js';
 
 const $ = (id) => document.getElementById(id);
+
+// merge reflection — the Map seats other players' flowers at the six roots
+// (game42.merge). The territory shows which roots carry a seated flower.
+// Declared at module top so the animation tick can read `merged` without a TDZ.
+const MERGE_KEY = 'game42.merge';
+const escT = (s) => String(s).replace(/[<>&"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]));
+let merged = {};
+function loadMergeT() { try { merged = JSON.parse(localStorage.getItem(MERGE_KEY)) || {}; } catch (e) { merged = {}; } return merged; }
 
 // ---- boot assertions (BUILD-PLAN Phase 0) --------------------------------
 const errs = bootAssert();
@@ -182,7 +191,9 @@ canvas.addEventListener('pointermove', (e) => {
     const g = getGame(activeGame);
     const cls = (g.classLabels && g.classLabels[s.personaClass]) || s.personaClass.replace('_', ' ');
     const role = (g.roles && g.roles[s.slotId]) || s.role;
-    tip.innerHTML = `<b>${g.axisLabels[s.axisId] || s.axisId} ${AXIS_GLYPH[s.axisId] || ''}</b> · ${cls}<br><span class="d">${role} · ${game.state[s.slotId]}</span>`;
+    const per = personaForSlot(s);
+    const head = per ? `${per.glyph} ${per.name}` : `${g.axisLabels[s.axisId] || s.axisId} ${AXIS_GLYPH[s.axisId] || ''}`;
+    tip.innerHTML = `<b>${head}</b> · ${cls}<br><span class="d">${role} · ${game.state[s.slotId]}</span>`;
     tip.style.left = e.clientX + 14 + 'px';
     tip.style.top = e.clientY + 14 + 'px';
     tip.classList.add('show');
@@ -298,6 +309,14 @@ function tick() {
       for (const a of AXIS_ORDER) board.ringByAxis[a].material.opacity = 0.9;
       latentCopy.classList.remove('show');
     }
+    // a root carrying a seated flower breathes brighter — the merge, reflected
+    for (let i = 0; i < AXIS_ORDER.length; i++) {
+      const a = AXIS_ORDER[i], ring = board.ringByAxis[a];
+      if (merged[a]) {
+        ring.material.opacity = Math.min(1, ring.material.opacity + 0.25 + 0.2 * Math.sin(t * 2 + i));
+        ring.scale.setScalar(1 + (params.reduced ? 0 : 0.12 * (0.5 + 0.5 * Math.sin(t * 2 + i))));
+      } else ring.scale.setScalar(1);
+    }
 
     // self-links: star ↔ protection (sword) + delegation (mage)
     selfLinks.visible = params.star;
@@ -337,6 +356,43 @@ function updateHUD() {
   $('sSeal').textContent = game.groupSeal ? game.groupSeal.slice(0, 32) + '…' : '—';
 }
 
+// ---- who-is-where: the named persona seated at a slot, + the live fill log --
+const SLOT_BY_ID = Object.fromEntries(SLOTS.map((s) => [s.slotId, s]));
+function personaForSlot(s) {
+  if (!s) return null;
+  const g = getGame(activeGame);
+  let key = (g.personaBySlot && g.personaBySlot[s.slotId]) || null;
+  if (!key && (activeGame === 'mages' || g.personas)) key = magesPersonaKey(s);
+  if (!key) return null;
+  return { key, name: personaName(key), glyph: personaGlyph(key) };
+}
+const FILL_VERB = { ROOT_IGNITE: 'ignited', FISH_PROPOSE: 'proposed', TASK_START: 'started work', TASK_VERIFY: 'verified', SLOT_SEAL: 'sealed', BOARD_SEAL: 'board sealed' };
+function logFill(act) {
+  const box = $('filllog'); if (!box || !act) return;
+  const empty = box.querySelector('.logempty'); if (empty) empty.remove();
+  const row = document.createElement('div'); row.className = 'logrow';
+  const g = getGame(activeGame);
+  if (act.text) {
+    row.innerHTML = `<span class="lg-verb">${act.text}</span>`;
+  } else if (act.slotId) {
+    const s = SLOT_BY_ID[act.slotId];
+    const per = personaForSlot(s);
+    const who = per ? `${per.glyph} ${per.name}` : (s ? s.role : act.slotId);
+    const where = s ? ((g.axisLabels && g.axisLabels[s.axisId]) || s.axisId) : '';
+    row.innerHTML = `<span class="lg-who">${who}</span> <span class="lg-verb">${FILL_VERB[act.type] || act.type}</span>` + (where ? ` <span class="lg-where">· ${where}</span>` : '');
+  } else if (act.axisId) {
+    const where = (g.axisLabels && g.axisLabels[act.axisId]) || act.axisId;
+    row.innerHTML = `<span class="lg-where">${where}</span> <span class="lg-verb">${FILL_VERB[act.type] || act.type}</span>`;
+  } else {
+    row.innerHTML = `<span class="lg-verb">${FILL_VERB[act.type] || act.type}</span>`;
+  }
+  box.prepend(row);
+  while (box.children.length > 40) box.removeChild(box.lastChild);
+}
+function clearFillLog() {
+  const box = $('filllog'); if (box) box.innerHTML = '<div class="logempty">ignite, then step or auto-play — each seat filled lands here</div>';
+}
+
 // ---- driver: step / auto-play -------------------------------------------
 let busy = false;
 async function stepOnce() {
@@ -352,6 +408,7 @@ async function stepOnce() {
     } else {
       game.dispatch(act);
     }
+    logFill(act);
     updateHUD();
     if (!nextAction(game, order) && !game.groupSeal) await finalizeSeal();
     return true;
@@ -400,6 +457,7 @@ async function finalizeSeal() {
   const gh = await geometryHash(board.snapshotAtP1(params.thetaMax, params.twist));
   const seal = await groupSeal(labels, gh);
   game.setGroupSeal(seal);
+  logFill({ text: '✦ board sealed · ' + seal.slice(0, 12) + '…' });
   updateHUD();
   toast('game sealed · ' + seal.slice(0, 12) + '…');
 }
@@ -459,11 +517,13 @@ function loadCfg(cfg) {
 function reset() {
   stopPlay();
   game = createGame(SLOTS, AXIS_ORDER);
+  clearFillLog();
   updateHUD();
   toast('reset · empty board');
 }
 function igniteAll() {
   for (const a of AXIS_ORDER) game.dispatch({ type: 'ROOT_IGNITE', axisId: a });
+  logFill({ text: '⚡ six roots ignited · 36 seats open' });
   updateHUD();
   toast('six roots ignited');
 }
@@ -521,12 +581,17 @@ $('launcher').addEventListener('click', () => { $('console').classList.remove('f
 let inspSlot = null;
 function openInspect(s) {
   inspSlot = s;
-  $('inspTitle').textContent = s.slotId;
+  const g = getGame(activeGame);
+  const per = personaForSlot(s);
+  const cls = (g.classLabels && g.classLabels[s.personaClass]) || s.personaClass.replace('_', ' ');
+  const role = (g.roles && g.roles[s.slotId]) || s.role;
+  const axisLbl = (g.axisLabels && g.axisLabels[s.axisId]) || s.axisId;
+  $('inspTitle').textContent = per ? `${per.glyph} ${per.name}` : s.slotId;
   const force = AXIS_GLYPH[s.axisId] ? ' ' + AXIS_GLYPH[s.axisId] : '';
   const ground = s.faculty.map((f) => (TRIAD.find((t) => t.faculty === f) || {}).ground).join('+');
   $('inspMeta').innerHTML =
-    `<b>${s.role}</b> · ${s.personaClass.replace('_', ' ')}<br>` +
-    `axis <b>${s.axisId}${force}</b> · template <b>${s.personaTemplate}</b><br>` +
+    `<b>${role}</b> · ${cls}<br>` +
+    `axis <b>${axisLbl}${force}</b> · seat <b>${s.slotId}</b><br>` +
     `state <b>${game.state[s.slotId]}</b> · fill #${s.fillOrder}` +
     `<div><span class="chip">${s.faculty.join('+')}</span><span class="chip">${ground}</span>` +
     `<span class="chip">lattice v${s.latticeAxisVertex}</span></div>` +
@@ -597,12 +662,19 @@ function applyPreset(id) {
 document.querySelectorAll('#preset button').forEach((b) => b.addEventListener('click', () => applyPreset(b.dataset.g)));
 applyPreset(activeGame);
 
-// axis legend with the four-force glyphs
-$('legendAxis').innerHTML = AXIS_ORDER.map((a) => {
-  const ax = AXIS_BY_ID[a];
-  const force = AXIS_GLYPH[a] ? ' ' + AXIS_GLYPH[a] : '';
-  return `<span><i style="background:${ax.colour}"></i>${a}${force}</span>`;
-}).join('');
+// axis legend with the four-force glyphs (+ any seated flower)
+function renderAxisLegend() {
+  loadMergeT();
+  $('legendAxis').innerHTML = AXIS_ORDER.map((a) => {
+    const ax = AXIS_BY_ID[a];
+    const force = AXIS_GLYPH[a] ? ' ' + AXIS_GLYPH[a] : '';
+    const s = merged[a];
+    const seat = s ? ` <b style="color:#cfe0ff" title="seated flower · κ ${escT((s.kappa || '').slice(0, 8))}">${escT(s.glyph || '🌸')} ${escT(s.name)}</b>` : '';
+    return `<span><i style="background:${ax.colour}"></i>${a}${force}${seat}</span>`;
+  }).join('');
+}
+renderAxisLegend();
+window.addEventListener('focus', renderAxisLegend);
 
 // triad legend (the head·soil / heart·soul / hands·society corners — once, not 18×)
 $('legendTriad').innerHTML = TRIAD.map(

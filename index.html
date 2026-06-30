@@ -16,8 +16,17 @@
     color:var(--ink);font:13px/1.6 ui-monospace,"Spline Sans Mono",SFMono-Regular,Menlo,Consolas,monospace}
   .wrap{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
     text-align:center;padding:40px 20px;gap:0}
-  .mark{font:700 40px/1 ui-monospace,monospace;letter-spacing:.04em;margin-bottom:8px}
+  .mark{font:700 clamp(24px,5.4vw,38px)/1 ui-monospace,monospace;letter-spacing:.02em;margin-bottom:10px;
+    display:inline-flex;align-items:center;gap:.14em;white-space:nowrap}
   .mark .s{color:var(--sword)} .mark .m{color:var(--accent)}
+  .mark .perp{color:rgba(255,255,255,.32);font-weight:400}
+  .mark .paren{color:rgba(255,255,255,.45);font-weight:400}
+  /* the 4 and 2 nested inside the plurality knot */
+  .mark .plur{position:relative;display:inline-flex;align-items:center;justify-content:center;
+    font-size:1.5em;color:rgba(233,236,244,.85)}
+  .mark .plur .s,.mark .plur .m{font-size:.62em;font-weight:700}
+  .mark .plur .s{margin-right:-.06em} .mark .plur .m{margin-left:-.06em}
+  .mark .smile{font-size:.82em;margin-left:.04em}
   h1{margin:0;font:600 clamp(30px,6vw,46px)/1.05 Fraunces,Georgia,serif}
   .dek{margin:9px 0 16px;color:var(--dim);max-width:52ch;font-style:italic}
   .loop{margin:0 0 26px;display:flex;flex-wrap:wrap;gap:6px 9px;justify-content:center;align-items:center;
@@ -54,7 +63,9 @@
 </head>
 <body>
   <main class="wrap">
-    <div class="mark"><span class="s">4</span><span class="m">2</span></div>
+    <div class="mark" aria-label="the Game of 42 — (sword ⊥ plurality ⊥ mage)">
+      <span class="paren">(</span>&#9876;&#65039;<span class="perp">&perp;</span><span class="plur"><span class="s">4</span>&#12347;<span class="m">2</span></span><span class="perp">&perp;</span>&#129497;<span class="paren">)</span><span class="smile">&#128578;</span>
+    </div>
     <h1>The Game of 42</h1>
     <p class="dek">The game is always on &mdash; you live in it at many magnifications: a node, a board
       of forty-two, a constellation of boards. Each board is a governance assembly for the guides
@@ -65,9 +76,9 @@
       <span class="ar">&rarr;</span><span class="again">again &#8635;</span>
     </div>
 
-    <a class="start" href="./map.html?start">
+    <a class="start" href="./flower.html">
       <span class="ic">&#9654;</span>
-      <span>Start Game<span class="sub">choose six roots &middot; fill &middot; capture &middot; assign &middot; again</span></span>
+      <span>Start Game<span class="sub">choose the first six mages &middot; fill &middot; capture &middot; assign &middot; again</span></span>
     </a>
 
     <blockquote class="spell" aria-label="the Emergence Spell">
@@ -79,6 +90,7 @@
     <a class="invite" href="./map.html?join">received an invitation? arrive at a game &rarr;</a>
 
     <nav class="pagenav" aria-label="All views">
+      <a href="./flower.html">flower</a>
       <a href="./map.html">map</a>
       <a href="./territory.html">territory</a>
       <a href="./constellation.html">constellation</a>

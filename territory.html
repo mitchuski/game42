@@ -65,6 +65,16 @@
   .legend{display:flex;flex-wrap:wrap;gap:5px 10px;margin-top:4px}
   .legend span{display:flex;align-items:center;gap:5px;color:var(--dim);font-size:10.5px}
   .legend i{width:9px;height:9px;border-radius:50%;display:inline-block}
+  .leglbl{font-size:9.5px;letter-spacing:.04em;color:var(--dim);opacity:.8;margin:0 0 3px}
+  #filllog{max-height:132px;overflow:auto;display:flex;flex-direction:column;gap:3px;margin-top:2px}
+  .logrow{font-size:10.5px;color:var(--dim);border-left:2px solid var(--accent);padding:2px 0 2px 8px;line-height:1.35;animation:logIn .25s ease}
+  .logrow .lg-who{color:var(--ink)}
+  .logrow .lg-verb{color:var(--accent)}
+  .logrow .lg-where{color:var(--dim)}
+  .logempty{color:var(--dim);opacity:.55;font-size:10.5px;line-height:1.4}
+  @keyframes logIn{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
+  .caption{color:var(--dim);font-size:11px;margin:8px 0 0;line-height:1.5}
+  .caption b{color:var(--ink);font-weight:600}
   input[type=file]{display:none}
   input[type=color]{margin-left:auto;width:40px;height:22px;border:1px solid var(--line);border-radius:6px;background:none;padding:0;cursor:pointer}
 
@@ -122,23 +132,24 @@
   <canvas id="scene"></canvas>
 
   <div id="title">
-    <h1>The Game of 42</h1>
-    <p>six axes &times; seven stations &middot; fold to the star</p>
-    <nav class="pagenav"><a href="./index.html">menu</a><a href="./map.html">map</a><a href="./territory.html" class="on">territory</a><a href="./constellation.html">constellation</a><a href="./grid.html">grid</a></nav>
+    <h1>The Game of 42 &middot; territory</h1>
+    <p>the runtime &middot; agents fill the 42 seats &middot; the board folds to the star</p>
+    <nav class="pagenav"><a href="./index.html">menu</a><a href="./flower.html">flower</a><a href="./map.html">map</a><a href="./territory.html" class="on">territory</a><a href="./constellation.html">constellation</a><a href="./grid.html">grid</a></nav>
   </div>
 
   <button id="launcher" class="go">&#9776; console</button>
 
   <aside id="console">
     <div class="grp">
-      <h2>Play</h2>
+      <h2>Play &middot; the runtime</h2>
       <div class="btns">
-        <button id="bIgnite">Ignite roots</button>
-        <button id="bStep">Step fill</button>
-        <button id="bPlay" class="go">&#9654; Auto-play</button>
-        <button id="bReset">Reset</button>
-        <button id="bFocus">&#127916; Focus (F)</button>
+        <button id="bIgnite" title="light the six axis roots — each opens a heptad of 7 empty seats">Ignite roots</button>
+        <button id="bStep" title="fill the next seat in order: 3 vision fish → 3 mice → the guide last">Step fill</button>
+        <button id="bPlay" class="go" title="auto-fill seat by seat until all six heptads lock and the board seals">&#9654; Auto-play</button>
+        <button id="bReset" title="clear the board back to seeded — every seat empty">Reset</button>
+        <button id="bFocus" title="hide the chrome, keep the sculpture turning (press F)">&#127916; Focus (F)</button>
       </div>
+      <p class="caption"><b>Ignite</b> opens the six axes — each is a heptad of 7 seats. Then <b>step</b> or <b>auto-play</b> sends agents to the seats in fill order; the keystone <b>guide</b> seals last. A seat only advances once its trust task verifies. Hover any seat to see who's there.</p>
     </div>
 
     <div class="grp">
@@ -149,12 +160,17 @@
 
     <div class="grp">
       <h2>State</h2>
-      <div class="stat"><span>completion p</span><b id="sP">0.00</b></div>
-      <div class="stat"><span>sealed slots</span><b id="sSealed">0 / 42</b></div>
-      <div class="stat"><span>heptads locked</span><b id="sHept">0 / 6</b></div>
-      <div class="stat"><span>board</span><b id="sBoard">seeded</b></div>
-      <div class="stat"><span>group seal</span><b></b></div>
+      <div class="stat"><span title="sealed seats ÷ 42 — this number drives the fold to the star">completion p</span><b id="sP">0.00</b></div>
+      <div class="stat"><span title="seats locked into their heptad — immutable once sealed">sealed slots</span><b id="sSealed">0 / 42</b></div>
+      <div class="stat"><span title="heptads with all 7 seats sealed (the guide sealing last)">heptads locked</span><b id="sHept">0 / 6</b></div>
+      <div class="stat"><span title="seeded → assembling → sealed, when all six heptads lock">board</span><b id="sBoard">seeded</b></div>
+      <div class="stat"><span title="one SHA-256 over all 42 seat κ-labels + the geometry, computed when the board seals">group seal</span><b></b></div>
       <div class="seal" id="sSeal">&mdash;</div>
+    </div>
+
+    <div class="grp">
+      <h2>Fill log &middot; who arrived where</h2>
+      <div id="filllog"><div class="logempty">ignite, then step or auto-play — each seat filled lands here</div></div>
     </div>
 
     <div class="grp">
@@ -195,13 +211,29 @@
 
     <div class="grp">
       <h2>Legend</h2>
+      <div class="leglbl">the six axes — one heptad each</div>
       <div class="legend" id="legendAxis"></div>
-      <div class="legend" style="margin-top:6px">
-        <span><i style="background:#38BDF8"></i>vision fish</span>
-        <span><i style="background:#C9A227"></i>mouse</span>
-        <span><i style="background:#F5F0E1;box-shadow:0 0 0 2px #2563EB inset"></i>guide</span>
+
+      <div class="leglbl" style="margin-top:8px">who fills the seats — by fill order</div>
+      <div class="legend">
+        <span><i style="background:#38BDF8"></i>vision fish · head · advisors (1–3)</span>
+        <span><i style="background:#C9A227"></i>mouse · hands/heart · builders (4–6)</span>
+        <span><i style="background:#F5F0E1;box-shadow:0 0 0 2px #2563EB inset"></i>guide · all three · keystone (7)</span>
       </div>
-      <div class="legend" id="legendTriad" style="margin-top:6px"></div>
+
+      <div class="leglbl" style="margin-top:8px">seat lifecycle — seats grow &amp; brighten</div>
+      <div class="legend">
+        <span><i style="background:#8c95ad;opacity:.45;width:6px;height:6px"></i>empty</span>
+        <span><i style="background:#9fb4e8;opacity:.75;width:7px;height:7px"></i>proposed</span>
+        <span><i style="background:#cfe0ff;width:8px;height:8px"></i>in progress</span>
+        <span><i style="background:#7be0b0;width:9px;height:9px"></i>verified</span>
+        <span><i style="background:#E0A526;box-shadow:0 0 6px #E0A526;width:10px;height:10px"></i>sealed · locked</span>
+      </div>
+
+      <div class="leglbl" style="margin-top:8px">faculty corners — head / heart / hands</div>
+      <div class="legend" id="legendTriad"></div>
+
+      <div class="caption" style="font-size:10px;margin-top:8px">Hover or tap a seat to read its axis, persona and state — who's where as the board fills.</div>
     </div>
 
     <div class="grp" style="margin-bottom:2px">

@@ -240,7 +240,7 @@ function renderCBoard() {
       if (it) {
         filled++;
         const g = it.emoji || (it.kind === 'key' ? '🗝️' : '🎴');
-        html += `<div class="sq filled${it.kind === 'key' ? ' key' : ''}" data-slot="${s.slotId}" style="background:${col}22;border-color:${col}88" title="${esc(it.name || s.slotId)}">${esc(g)}</div>`;
+        html += `<div class="sq filled${it.kind === 'key' ? ' key' : ''}" data-slot="${s.slotId}" style="background:${col}26;border-color:${col};box-shadow:0 0 12px ${col}99,inset 0 0 9px ${col}40;font-size:17px" title="${esc(it.name || s.slotId)} — ${esc(g)}">${esc(g)}</div>`;
       } else if (ghostOn()) {
         const m = magesAt(s);
         html += `<div class="sq ghost" data-slot="${s.slotId}" data-ghost="1" title="example · ${esc(m ? m.name : s.slotId)}">${m ? esc(m.glyph) : ''}</div>`;
@@ -350,12 +350,6 @@ $('bWiki').addEventListener('click', async () => {
   setTimeout(() => { btn.textContent = old; }, 2600);
 });
 $('bMine').addEventListener('click', () => { const any = items.some((i) => !i.mine); items.forEach((i) => (i.mine = any)); render(); });
-$('bDerive').addEventListener('click', async () => {
-  try {
-    const obj = JSON.parse($('kin').value);
-    $('kout').textContent = 'sha256:' + (await sha256hex(canonical(obj)));
-  } catch (e) { $('kout').textContent = '⚠ not valid JSON'; }
-});
 $('cClear').addEventListener('click', () => { assign = {}; saveAssign(); renderCBoard(); $('cdetail').textContent = 'tap a filled square to read its artefact'; });
 $('cGhost').addEventListener('click', () => { showGhost = !ghostOn(); renderCBoard(); });
 $('cExport').addEventListener('click', exportConstellation);
