@@ -1,0 +1,21 @@
+/* game42.css — the one shared sheet: theme custom properties, the on-screen
+   error surface, and the loop bar decorations on .pagenav. Every page links
+   this BEFORE its own <style>, so page styles may override. */
+:root{
+  --bg:#0B0E14; --ink:#e9ecf4; --dim:#8c95ad; --line:rgba(255,255,255,.10);
+  --glass:rgba(18,22,33,.72); --sword:#E0A526; --mage:#2563EB; --accent:#38BDF8;
+}
+
+/* runtime error surface (window.__gerr writes here) */
+#err{display:none;position:fixed;left:12px;bottom:12px;max-width:60vw;max-height:50vh;overflow:auto;z-index:90;
+  margin:0;padding:10px 12px;background:rgba(40,8,8,.92);border:1px solid #a33;border-radius:10px;color:#ffb4b4;
+  font:11px/1.45 ui-monospace,monospace;white-space:pre-wrap}
+
+/* the loop, made visible — progress badges + the next move on every pagenav */
+.pagenav a{position:relative}
+.pagenav a .bdg{font-style:normal;font-size:9px;color:var(--accent);margin-left:6px;
+  font-variant-numeric:tabular-nums;letter-spacing:0}
+.pagenav a.stage-done .bdg{color:#7be0b0}
+.pagenav .nextmove{color:var(--accent) !important;border-color:rgba(56,189,248,.4) !important;
+  background:rgba(56,189,248,.08)}
+.pagenav .nextmove:hover{background:rgba(56,189,248,.18)}

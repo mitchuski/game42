@@ -2,10 +2,9 @@
 // Does not block; returns human-readable warnings so the UI can surface drift when
 // someone joins/inserts a game or key that disagrees with the shared lattice.
 
-// A1 axis basis vertices + the apex (all six held). A conformant City-Key projection
-// only ever lights these.
-const VALID_VERTS = new Set([1, 2, 4, 8, 16, 32, 63]);
-export const AXIS_IDS = ['compute', 'connection', 'delegation', 'protection', 'memory', 'value'];
+// A1 axis basis vertices + the apex (all six held) come from the shared canon.
+import { VALID_VERTS, AXIS_IDS } from './canon.js';
+export { AXIS_IDS };
 
 export function conformImport(cfg) {
   const w = [];

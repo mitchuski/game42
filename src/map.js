@@ -8,6 +8,8 @@ import { pngExtract, pngEmbed } from './pngkey.js';
 import { canonical, sha256hex } from './hash.js';
 import { conformImport } from './conform.js';
 import { fetchGame } from './fedwiki.js';
+import { esc } from './canon.js';
+import * as store from './store.js';
 
 const MIRROR = { head: 'soil', heart: 'soul', hands: 'society' };
 const FORCE = { protection: '⚔️', delegation: '🧙', memory: '🪞', connection: '🤝', compute: '⚡', value: '💎' };
@@ -19,7 +21,6 @@ const CLASS = {
 const GRAPH = { seeded: 'knowledge graph', assembling: 'promise graph', sealed: 'trust graph' };
 const axisColor = (id) => AXIS_BY_ID[id].colour;
 const facMirror = (s) => s.faculty.map((f) => `${f}·${MIRROR[f]}`).join(' + ');
-const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
 const clsLabel = (g, c) => (g.classLabels && g.classLabels[c]) || CLASS[c].label;
 const roleOf = (g, s) => (g.roles && g.roles[s.slotId]) || s.role;
 function templateOf(g, s) {
@@ -51,13 +52,13 @@ let selected = null; // slotId open in the right-panel node editor
 // merge store: each of the 6 roots may hold another player's whole flower, bound
 // by the A5 seam { name, glyph, seal, kappa, axisBitmask } only — never interior.
 const MERGE_KEY = 'game42.merge';
-function loadMerge() { try { return JSON.parse(localStorage.getItem(MERGE_KEY)) || {}; } catch (e) { return {}; } }
-function saveMerge(m) { try { localStorage.setItem(MERGE_KEY, JSON.stringify(m)); } catch (e) {} }
+function loadMerge() { return store.load(MERGE_KEY, {}) || {}; }
+function saveMerge(m) { store.save(MERGE_KEY, m); }
 let mergeTarget = null; // axisId awaiting a seated flower from the shared file input
 let litNow = null; // transient run set; null => render from `locked`
 const LOCKED_KEY = 'game42.locked';
-let locked = (() => { try { return new Set(JSON.parse(localStorage.getItem(LOCKED_KEY) || '[]')); } catch (e) { return new Set(); } })();
-const saveLocked = () => { try { localStorage.setItem(LOCKED_KEY, JSON.stringify([...locked])); } catch (e) {} };
+let locked = new Set(store.load(LOCKED_KEY, []) || []);
+const saveLocked = () => store.save(LOCKED_KEY, [...locked]);
 const isLit = (s) => (litNow || locked).has(s.slotId);
 const globalNo = (s) => AXIS_ORDER.indexOf(s.axisId) * 7 + s.fillOrder;
 const GA = Math.PI * (3 - Math.sqrt(5));
@@ -235,11 +236,10 @@ async function exportMine() {
 async function addMineToGrid(btn) {
   const c = loadCustom();
   const kappa = await sha256hex(canonical(c));
-  let list = [];
-  try { list = JSON.parse(localStorage.getItem('game42.grid') || '[]'); } catch (e) {}
+  const list = store.load('game42.grid', []) || [];
   if (!list.some((x) => x.kappaRaw === kappa)) {
     list.push({ name: c.name || 'my42', kind: 'game', kappaRaw: kappa, prior: null, palette: null, mine: true, emoji: '✎', proverb: c.tagline || '' });
-    localStorage.setItem('game42.grid', JSON.stringify(list));
+    store.save('game42.grid', list);
     if (btn) btn.textContent = '✓ added to grid';
   } else if (btn) btn.textContent = '✓ already in grid';
 }
@@ -323,11 +323,9 @@ function refreshViews(game) {
 // your keys = the City-Key roles you hold (the keys collected on the Grid).
 // These are the "first person" options: seating one places you / your credential.
 function readMyKeys() {
-  try {
-    const list = JSON.parse(localStorage.getItem('game42.grid') || '[]');
-    return list.filter((x) => x && x.kind === 'key' && x.kappaRaw)
-      .map((x) => ({ name: x.name || 'key', kappaRaw: String(x.kappaRaw).replace('sha256:', '') }));
-  } catch (e) { return []; }
+  const list = store.load('game42.grid', []) || [];
+  return list.filter((x) => x && x.kind === 'key' && x.kappaRaw)
+    .map((x) => ({ name: x.name || 'key', kappaRaw: String(x.kappaRaw).replace('sha256:', '') }));
 }
 
 function renderNodeEditor() {

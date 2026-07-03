@@ -4,9 +4,26 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="stylesheet" href="/game42.css" />
 <title>The Game of 42 — Grid</title>
+<script>
+  // surface any runtime error on-screen (a thrown module error is otherwise silent)
+  window.__gerr = function (m) {
+    try {
+      let d = document.getElementById('err');
+      if (!d) { d = document.createElement('pre'); d.id = 'err'; document.body.appendChild(d); }
+      d.style.display = 'block';
+      d.textContent = '⚠ ' + m;
+    } catch (e) {}
+  };
+  window.addEventListener('error', (e) =>
+    window.__gerr((e.message || e.type) + '\n' + ((e.error && e.error.stack) || (e.filename + ':' + e.lineno)))
+  );
+  window.addEventListener('unhandledrejection', (e) =>
+    window.__gerr('promise: ' + ((e.reason && (e.reason.stack || e.reason.message)) || e.reason))
+  );
+</script>
 <style>
-  :root{ --bg:#0B0E14; --ink:#e9ecf4; --dim:#8c95ad; --line:rgba(255,255,255,.10); --glass:rgba(18,22,33,.72); --accent:#38BDF8; }
   *{box-sizing:border-box}
   html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);
     font:13px/1.6 ui-monospace,"Spline Sans Mono",Menlo,Consolas,monospace}
@@ -136,5 +153,6 @@
   </main>
   <div id="emojipick"></div>
   <script type="module" src="/src/grid.js"></script>
+  <script type="module" src="/src/loopbar.js"></script>
 </body>
 </html>

@@ -4,6 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="stylesheet" href="/game42.css" />
 <title>The Game of 42</title>
 <script>
   // surface any runtime error on-screen (the WebGL scene is otherwise silent)
@@ -23,10 +24,6 @@
   );
 </script>
 <style>
-  :root{
-    --bg:#0B0E14; --ink:#e9ecf4; --dim:#8c95ad; --line:rgba(255,255,255,.10);
-    --glass:rgba(18,22,33,.72); --sword:#E0A526; --mage:#2563EB; --accent:#38BDF8;
-  }
   *{box-sizing:border-box}
   html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
     font:13px/1.5 ui-monospace,"Spline Sans Mono",SFMono-Regular,Menlo,Consolas,monospace;
@@ -111,6 +108,18 @@
   .seg{display:flex;gap:4px;flex:1}
   .seg button{flex:1;padding:5px 4px}
   .seg button.on{background:rgba(56,189,248,.16);border-color:rgba(56,189,248,.4)}
+  /* the tune drawer — player controls stay up top, dev knobs fold away */
+  details.tune{margin:0 0 12px;border:1px solid var(--line);border-radius:11px;padding:8px 10px}
+  details.tune summary{cursor:pointer;color:var(--dim);font:600 10px/1.6 inherit;letter-spacing:.14em;text-transform:uppercase;user-select:none}
+  details.tune[open] summary{margin-bottom:4px}
+  button:disabled{opacity:.4;cursor:default}
+  /* [?] keyboard overlay */
+  #keys{position:fixed;inset:0;z-index:40;display:none;align-items:center;justify-content:center;background:rgba(6,8,14,.72);backdrop-filter:blur(4px)}
+  #keys.show{display:flex}
+  #keys .kcard{background:var(--glass);border:1px solid var(--line);border-radius:14px;padding:18px 22px;min-width:260px}
+  #keys h3{margin:0 0 10px;font:600 14px/1.2 Fraunces,Georgia,serif}
+  #keys .kr{display:flex;justify-content:space-between;gap:18px;color:var(--dim);margin:5px 0}
+  #keys kbd{color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:1px 7px;font:inherit}
   /* [f] focus mode — fade all chrome, keep the sculpture turning */
   body.focus #console,body.focus #title,body.focus #hint,body.focus #diag,body.focus #inspect,
   body.focus #launcher,body.focus #latentcopy{opacity:0 !important;pointer-events:none !important;transition:opacity .6s}
@@ -123,9 +132,6 @@
     padding:6px 9px;font-size:11px;color:var(--ink);opacity:0;transition:opacity .12s;backdrop-filter:blur(8px);max-width:230px}
   #tip.show{opacity:.96}
   #tip .d{color:var(--dim)}
-  #err{display:none;position:fixed;left:12px;bottom:40px;max-width:60vw;max-height:50vh;overflow:auto;z-index:30;
-    margin:0;padding:10px 12px;background:rgba(40,8,8,.92);border:1px solid #a33;border-radius:10px;color:#ffb4b4;
-    font:11px/1.45 ui-monospace,monospace;white-space:pre-wrap}
 </style>
 </head>
 <body>
@@ -154,7 +160,7 @@
 
     <div class="grp">
       <h2>Game</h2>
-      <div class="seg" id="preset"><button data-g="mages" class="on">&#129497; mages</button><button data-g="mine">&#9998; my42</button></div>
+      <div class="seg" id="preset" role="group" aria-label="game vocabulary"><button data-g="mages" class="on">&#129497; mages</button><button data-g="fish">&#128031; fish</button><button data-g="mice">&#128045; mice</button><button data-g="mine">&#9998; my42</button></div>
       <div id="presetTag" style="color:var(--dim);font-size:11px;margin-top:7px"></div>
     </div>
 
@@ -174,13 +180,25 @@
     </div>
 
     <div class="grp">
+      <h2>Carry</h2>
+      <div class="btns">
+        <button id="bSave" title="save the board as a PNG that carries the whole event log">&#128247; Save PNG</button>
+        <button id="bCard" disabled title="the shareable seal card — folded star, axis ring, the 42, the seal (enabled once the board seals)">&#10038; Seal card</button>
+        <button id="bLoad" title="load a saved game PNG / JSON — replays its log">&#8682; Load PNG</button>
+        <input id="fLoad" type="file" accept="image/png,application/json">
+      </div>
+    </div>
+
+    <details class="tune">
+    <summary>Tune &middot; fold, feel &amp; colours</summary>
+    <div class="grp" style="margin-top:10px">
       <h2>Fold &amp; feel</h2>
       <div class="row"><label>fold p (manual)</label><input id="rP" type="range" min="0" max="1" step="0.01" value="0"><span class="val" id="rPv">0.00</span></div>
       <div class="row"><label>&theta; max</label><input id="rTheta" type="range" min="0" max="90" step="1" value="70"><span class="val" id="rThetav">70</span></div>
-      <div class="row"><label>twist</label><input id="rTwist" type="range" min="0" max="360" step="1" value="138"><span class="val" id="rTwistv">138</span></div>
+      <div class="row"><label>twist</label><input id="rTwist" type="range" min="0" max="360" step="0.1" value="137.5" title="the golden angle 137.508° — the Fibonacci twist the fold turns by"><span class="val" id="rTwistv">137.5</span></div>
       <div class="row"><label>breathe</label><input id="rBreathe" type="range" min="0" max="0.3" step="0.005" value="0.05"><span class="val" id="rBreathev">0.05</span></div>
       <div class="row"><label>spin</label><input id="rSpin" type="range" min="0" max="1" step="0.02" value="0.18"><span class="val" id="rSpinv">0.18</span></div>
-      <div class="row"><label>star</label><span class="seg" id="starMode"><button data-m="facet" class="on">facet</button><button data-m="surface">surface</button><button data-m="wire">wire</button></span></div>
+      <div class="row"><label>star</label><span class="seg" id="starMode" role="group" aria-label="star render mode"><button data-m="facet" class="on">facet</button><button data-m="surface">surface</button><button data-m="wire">wire</button></span></div>
       <div class="row"><label>self star</label><input id="rStarSize" type="range" min="0.4" max="1.8" step="0.05" value="1"><span class="val" id="rStarSizev">1.00</span></div>
       <label class="toggle"><input id="tStar" type="checkbox" checked> floating star</label>
       <label class="toggle"><input id="tCore" type="checkbox" checked> core spiral (keystone hexad)</label>
@@ -199,15 +217,7 @@
       <div class="row"><label>faculty tint</label><input id="rTint" type="range" min="0" max="1" step="0.05" value="0.5"><span class="val" id="rTintv">0.50</span></div>
       <div class="btns"><button id="cReset">reset colours</button></div>
     </div>
-
-    <div class="grp">
-      <h2>Carry</h2>
-      <div class="btns">
-        <button id="bSave">&#128247; Save PNG</button>
-        <button id="bLoad">&#8682; Load PNG</button>
-        <input id="fLoad" type="file" accept="image/png,application/json">
-      </div>
-    </div>
+    </details>
 
     <div class="grp">
       <h2>Legend</h2>
@@ -256,11 +266,24 @@
 
   <div id="toast"></div>
   <div id="tip"></div>
+  <div id="keys" role="dialog" aria-label="keyboard shortcuts">
+    <div class="kcard">
+      <h3>keys &amp; moves</h3>
+      <div class="kr"><span>focus mode</span><kbd>F</kbd></div>
+      <div class="kr"><span>save PNG</span><kbd>S</kbd></div>
+      <div class="kr"><span>exit focus / close</span><kbd>Esc</kbd></div>
+      <div class="kr"><span>this overlay</span><kbd>?</kbd></div>
+      <div class="kr"><span>orbit</span><span>drag</span></div>
+      <div class="kr"><span>zoom</span><span>scroll / pinch</span></div>
+      <div class="kr"><span>inspect a seat</span><span>tap it</span></div>
+    </div>
+  </div>
   <div class="focusbadge" id="focusbadge">focus &middot; S snaps 📸 &middot; tap / Esc / F to exit</div>
   <div id="latentcopy">map the first star</div>
-  <div id="hint">drag to orbit &middot; scroll to zoom &middot; tap a slot to inspect</div>
+  <div id="hint">drag to orbit &middot; scroll to zoom &middot; tap a slot to inspect &middot; <b style="color:#cfe0ff">?</b> keys</div>
   <div id="diag">booting&hellip;</div>
 
   <script type="module" src="/src/main.js"></script>
+  <script type="module" src="/src/loopbar.js"></script>
 </body>
 </html>

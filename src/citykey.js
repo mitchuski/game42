@@ -9,6 +9,7 @@
 // `kappa`) — NOT game42's bare-hex hash.js canon — so /skye's re-derivation on
 // import matches byte-for-byte and reads "verified". See holokey.js plan, Phase 0.
 import { sha256hex } from './hash.js';
+import { AXIS_VERTEX } from './canon.js';
 
 // The carrier palette is the soulbis canon (coral sword / cyan mage), so the star
 // renders and charges in the colours /skye + /city expect. game42's forge palette
@@ -30,13 +31,11 @@ export async function kappaCity(obj) {
   return 'sha256:' + (await sha256hex(canonicalJSON(c)));
 }
 
-// Axis -> lattice basis vertex, the SOULBIS convention (lattice/index.html:217-220,
-// MODEL-locked 2026-06-12, PVM §12.6: "d₁ Protection is the HIGH bit"). This is the
-// shared coordinate system; game42 conforms to it (and game-of-42.json's per-axis
-// latticeAxisVertex now carries the same numbers) so a sealed axis lights the SAME
+// Axis -> lattice basis vertex, the SOULBIS convention: AXIS_VERTEX from canon.js
+// (lattice/index.html:217-220, MODEL-locked 2026-06-12, PVM §12.6). This is the
+// shared coordinate system; game42 conforms to it so a sealed axis lights the SAME
 // vertex both systems mean by it — otherwise common-ground/overlap compares the
-// wrong points. NOT 1<<axisIndex (that scrambled protection->8 instead of ->32).
-const AXIS_VERTEX = { protection: 32, delegation: 16, memory: 8, connection: 4, compute: 2, value: 1 };
+// wrong points.
 
 // game -> City Key projection. opts: { preset, seal, savedAt, prior? }
 export function game42ToCityKey(game, opts) {

@@ -4,12 +4,26 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="stylesheet" href="/game42.css" />
 <title>The Game of 42 — Flower</title>
+<script>
+  // surface any runtime error on-screen (a thrown module error is otherwise silent)
+  window.__gerr = function (m) {
+    try {
+      let d = document.getElementById('err');
+      if (!d) { d = document.createElement('pre'); d.id = 'err'; document.body.appendChild(d); }
+      d.style.display = 'block';
+      d.textContent = '⚠ ' + m;
+    } catch (e) {}
+  };
+  window.addEventListener('error', (e) =>
+    window.__gerr((e.message || e.type) + '\n' + ((e.error && e.error.stack) || (e.filename + ':' + e.lineno)))
+  );
+  window.addEventListener('unhandledrejection', (e) =>
+    window.__gerr('promise: ' + ((e.reason && (e.reason.stack || e.reason.message)) || e.reason))
+  );
+</script>
 <style>
-  :root{
-    --bg:#0B0E14; --ink:#e9ecf4; --dim:#8c95ad; --line:rgba(255,255,255,.10);
-    --glass:rgba(18,22,33,.72); --sword:#E0A526; --mage:#2563EB; --accent:#38BDF8;
-  }
   *{box-sizing:border-box}
   html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);
     font:13px/1.6 ui-monospace,"Spline Sans Mono",SFMono-Regular,Menlo,Consolas,monospace}
@@ -107,7 +121,7 @@
       <a href="./constellation.html">constellation</a>
       <a href="./grid.html">grid</a>
     </nav>
-    <div class="seg" id="preset"><button data-g="mages" class="on">&#129497; mages</button><button data-g="mine">&#9998; my42</button></div>
+    <div class="seg" id="preset" role="group" aria-label="game vocabulary"><button data-g="mages" class="on">&#129497; mages</button><button data-g="mine">&#9998; my42</button></div>
   </header>
   <main>
     <div class="panel" id="flowerwrap">
@@ -131,5 +145,6 @@
     </div>
   </main>
   <script type="module" src="/src/flower.js"></script>
+  <script type="module" src="/src/loopbar.js"></script>
 </body>
 </html>

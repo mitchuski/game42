@@ -8,6 +8,8 @@ import { SLOTS, SLOTS_BY_AXIS, AXIS_ORDER, AXIS_BY_ID } from './data.js';
 import { POOL, MAGES_42, personaGlyph, personaName } from './personas.js';
 import { conformImport } from './conform.js';
 import { fetchGame } from './fedwiki.js';
+import { esc } from './canon.js';
+import * as store from './store.js';
 
 // ---- emoji picker (typing emoji is unreliable; offer a palette) -----------
 const EMOJIS = (() => {
@@ -47,18 +49,16 @@ let items = [];
 let uid = 0;
 // constellation assignment: slotId -> a game's κ (compose a new 42 from many games)
 const CKEY = 'game42.constellation';
-let assign = (() => { try { return JSON.parse(localStorage.getItem(CKEY) || '{}'); } catch (e) { return {}; } })();
-const saveAssign = () => { try { localStorage.setItem(CKEY, JSON.stringify(assign)); } catch (e) {} };
+let assign = store.load(CKEY, {}) || {};
+const saveAssign = () => store.save(CKEY, assign);
 const byKappa = (k) => items.find((i) => i.kappaRaw === k);
 const STORE = 'game42.grid';
 function persist() {
-  try { localStorage.setItem(STORE, JSON.stringify(items.map((i) => ({ name: i.name, kind: i.kind, kappaRaw: i.kappaRaw, prior: i.prior, palette: i.palette, mine: i.mine, emoji: i.emoji || '', proverb: i.proverb || '' })))); } catch (e) {}
+  store.save(STORE, items.map((i) => ({ name: i.name, kind: i.kind, kappaRaw: i.kappaRaw, prior: i.prior, palette: i.palette, mine: i.mine, emoji: i.emoji || '', proverb: i.proverb || '' })));
 }
 function restore() {
-  try {
-    const a = JSON.parse(localStorage.getItem(STORE) || '[]');
-    items = a.map((o) => ({ id: ++uid, name: o.name, kind: o.kind, kappaRaw: o.kappaRaw, prior: o.prior || null, palette: o.palette || null, mine: !!o.mine, emoji: o.emoji || '', proverb: o.proverb || '', cfg: {} }));
-  } catch (e) { items = []; }
+  const a = store.load(STORE, []) || [];
+  items = a.map((o) => ({ id: ++uid, name: o.name, kind: o.kind, kappaRaw: o.kappaRaw, prior: o.prior || null, palette: o.palette || null, mine: !!o.mine, emoji: o.emoji || '', proverb: o.proverb || '', cfg: {} }));
 }
 
 // ---- load -----------------------------------------------------------------
@@ -111,14 +111,20 @@ function readFile(file) {
         if (!cfg) cfg = JSON.parse(new TextDecoder().decode(r.result));
       } catch (e) { cfg = null; }
       if (cfg) await addCfg(cfg, file.name.replace(/\.[a-z]+$/i, ''));
-      res();
+      res(!!cfg);
     };
     r.readAsArrayBuffer(file);
   });
 }
 
 async function addFiles(list) {
-  for (const f of list) await readFile(f);
+  const skipped = [];
+  for (const f of list) { if (!(await readFile(f))) skipped.push(f.name); }
+  if (skipped.length) {
+    const btn = $('bAdd'), old = btn.textContent;
+    btn.textContent = '⚠ no game/key in ' + skipped.join(', ').slice(0, 48);
+    setTimeout(() => { btn.textContent = old; }, 3200);
+  }
   render();
 }
 
@@ -286,8 +292,6 @@ async function exportConstellation() {
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'constellation-' + n + '.png';
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
-
-function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
 
 function drawLinks() {
   const wrap = $('wrap'), svg = $('links');

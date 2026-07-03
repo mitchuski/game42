@@ -1,4 +1,5 @@
 import { MAGES_42 } from './personas.js';
+import * as store from './store.js';
 
 // presets.js — the three games of 42. Same 6×7 lattice, three vocabularies that
 // rotate. Each relabels the six roots AND the personas, carries an accent, and a
@@ -31,19 +32,16 @@ export const GAMES = {
   },
 };
 
-// The quick-toggle offers two: `mages` (a complete state example) and `mine`
-// (my42 — start fresh in your own language). fish/mice stay defined above as
-// loadable example canons (the load screen), so each persona builds from start.
-export const GAME_ORDER = ['mages', 'mine'];
+// The toggles offer every vocabulary: `mages` (the complete state example),
+// the fish/mice example canons, and `mine` (my42 — your own language).
+export const GAME_ORDER = ['mages', 'fish', 'mice', 'mine'];
 export const DEFAULT_GAME = 'mages';
 
 const KEY = 'game42.preset';
 const CKEY = 'game42.custom';
 
 export function loadPreset() {
-  // Only the two toggle options resolve from storage now; a previously-saved
-  // fish/mice falls back to the complete example so the toggle stays consistent.
-  try { const v = localStorage.getItem(KEY); if (v === 'mages' || v === 'mine') return v; } catch (e) {}
+  try { const v = localStorage.getItem(KEY); if (v === 'mine' || GAMES[v]) return v; } catch (e) {}
   return DEFAULT_GAME;
 }
 export function savePreset(id) {
@@ -53,7 +51,8 @@ export function savePreset(id) {
 // the editable "my game" — a hitchhiker's own language. Seeded from the City of
 // Mages, then edited freely on the Map. Persisted in localStorage.
 export function loadCustom() {
-  try { const v = JSON.parse(localStorage.getItem(CKEY)); if (v && v.axisLabels) return v; } catch (e) {}
+  const v = store.load(CKEY, null);
+  if (v && v.axisLabels) return v;
   return {
     id: 'mine', name: 'my42', glyph: '✎', accent: '#7be0b0',
     tagline: 'edit it into your own language',
@@ -67,7 +66,7 @@ export function loadCustom() {
   };
 }
 export function saveCustom(c) {
-  try { localStorage.setItem(CKEY, JSON.stringify(c)); } catch (e) {}
+  store.save(CKEY, c);
 }
 export function getGame(id) {
   return id === 'mine' ? loadCustom() : GAMES[id];

@@ -1,5 +1,6 @@
 // data.js — load the single source of truth and assert its shape at boot.
 import GAME from '../game-of-42.json';
+import { AXIS_VERTEX } from './canon.js';
 
 export const DATA = GAME;
 export const SLOTS = GAME.slots;
@@ -28,7 +29,7 @@ export function bootAssert() {
     if (g.filter((s) => s.isKeystone).length !== 1) errs.push(`${a}: keystone count != 1`);
   }
   // A1 (AXIOMS.md): lattice vertex map — d₁ Protection = HIGH bit (32) … value = 1.
-  const VERT = { protection: 32, delegation: 16, memory: 8, connection: 4, compute: 2, value: 1 };
+  const VERT = AXIS_VERTEX;
   for (const s of SLOTS) {
     if (s.latticeAxisVertex !== VERT[s.axisId]) errs.push(`A1 drift: ${s.slotId} latticeAxisVertex ${s.latticeAxisVertex} != ${VERT[s.axisId]}`);
   }

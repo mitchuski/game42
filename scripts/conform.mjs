@@ -2,10 +2,18 @@
 // in AXIOMS.md: 42 slots · 6 heptads · 3 fish / 3 mice / 1 guide each, and the A1
 // lattice vertex map (d₁ Protection = HIGH bit 32 … value = 1) + the anchor sums.
 import { readFileSync } from 'node:fs';
+import { AXIS_VERTEX } from '../src/canon.js';
 
 const g = JSON.parse(readFileSync(new URL('../game-of-42.json', import.meta.url), 'utf8'));
+// This copy is the independent watchdog; src/canon.js must agree with it exactly.
 const VERT = { protection: 32, delegation: 16, memory: 8, connection: 4, compute: 2, value: 1 };
 const errs = [];
+
+// canon.js drift check — the runtime table must equal the gate's own copy
+for (const k of Object.keys(VERT)) {
+  if (AXIS_VERTEX[k] !== VERT[k]) errs.push(`src/canon.js AXIS_VERTEX.${k} = ${AXIS_VERTEX[k]} != ${VERT[k]}`);
+}
+if (Object.keys(AXIS_VERTEX).length !== 6) errs.push('src/canon.js AXIS_VERTEX must have exactly 6 axes');
 
 if (g.slots.length !== 42) errs.push(`expected 42 slots, got ${g.slots.length}`);
 const byAxis = {};

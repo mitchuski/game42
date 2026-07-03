@@ -4,12 +4,26 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="stylesheet" href="/game42.css" />
 <title>The Game of 42 — Map</title>
+<script>
+  // surface any runtime error on-screen (a thrown module error is otherwise silent)
+  window.__gerr = function (m) {
+    try {
+      let d = document.getElementById('err');
+      if (!d) { d = document.createElement('pre'); d.id = 'err'; document.body.appendChild(d); }
+      d.style.display = 'block';
+      d.textContent = '⚠ ' + m;
+    } catch (e) {}
+  };
+  window.addEventListener('error', (e) =>
+    window.__gerr((e.message || e.type) + '\n' + ((e.error && e.error.stack) || (e.filename + ':' + e.lineno)))
+  );
+  window.addEventListener('unhandledrejection', (e) =>
+    window.__gerr('promise: ' + ((e.reason && (e.reason.stack || e.reason.message)) || e.reason))
+  );
+</script>
 <style>
-  :root{
-    --bg:#0B0E14; --ink:#e9ecf4; --dim:#8c95ad; --line:rgba(255,255,255,.10);
-    --glass:rgba(18,22,33,.72); --sword:#E0A526; --mage:#2563EB; --accent:#38BDF8;
-  }
   *{box-sizing:border-box}
   html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);
     font:13px/1.6 ui-monospace,"Spline Sans Mono",SFMono-Regular,Menlo,Consolas,monospace}
@@ -116,9 +130,9 @@
     <h1>The Game of 42 — Map</h1>
     <p>the path that fills the territory &middot; six heptads, seven stations, one seal</p>
     <nav class="pagenav"><a href="./index.html">menu</a><a href="./flower.html">flower</a><a href="./map.html" class="on">map</a><a href="./territory.html">territory</a><a href="./constellation.html">constellation</a><a href="./grid.html">grid</a><a href="#" id="introLink">intro</a></nav>
-    <div class="seg" id="preset"><button data-g="mages">&#129497; mages</button><button data-g="mine">&#9998; my42</button></div>
-    <div class="seg" id="mode" style="margin-left:10px"><button data-m="fill" class="on">&#9632; fill 42</button><button data-m="merge">&#127800; merge</button></div>
-    <div class="seg" id="view" style="margin-top:8px"><button data-v="groups" class="on">groups</button><button data-v="core">core</button><button data-v="spiral">spiral</button></div>
+    <div class="seg" id="preset" role="group" aria-label="game vocabulary"><button data-g="mages">&#129497; mages</button><button data-g="fish">&#128031; fish</button><button data-g="mice">&#128045; mice</button><button data-g="mine">&#9998; my42</button></div>
+    <div class="seg" id="mode" style="margin-left:10px" role="group" aria-label="board mode"><button data-m="fill" class="on">&#9632; fill 42</button><button data-m="merge">&#127800; merge</button></div>
+    <div class="seg" id="view" style="margin-top:8px" role="group" aria-label="board layout"><button data-v="groups" class="on">groups</button><button data-v="core">core</button><button data-v="spiral">spiral</button></div>
     <div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <div class="seg" id="numbering"><button data-n="local" class="on">1&ndash;7</button><button data-n="global">1&ndash;42</button></div>
       <button id="runFills">&#9654; run</button>
@@ -140,5 +154,6 @@
   </main>
   <div class="introwrap" id="intro"><div class="introcard" id="introCard"></div></div>
   <script type="module" src="/src/map.js"></script>
+  <script type="module" src="/src/loopbar.js"></script>
 </body>
 </html>

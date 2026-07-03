@@ -16,15 +16,15 @@ import { GAMES, loadCustom, saveCustom } from './presets.js';
 import { MAGES_42, personaName, personaGlyph } from './personas.js';
 import { canonical, sha256hex } from './hash.js';
 import { pngEmbed } from './pngkey.js';
-
-// A1 lattice vertex per axis (AXIOMS) — the bit each root lights in a bitmask.
-const AXIS_VERTEX = { protection: 32, delegation: 16, memory: 8, connection: 4, compute: 2, value: 1 };
+// A1 lattice vertex per axis (the bit each root lights in a bitmask), the golden
+// angle, and the shared HTML-escape all come from the one canon module.
+import { AXIS_VERTEX, GOLDEN_ANGLE as GOLDEN, esc } from './canon.js';
+import * as store from './store.js';
 
 const errs = bootAssert();
 if (errs.length) console.warn('[flower] boot assertions:', errs);
 
 const SVGNS = 'http://www.w3.org/2000/svg';
-const GOLDEN = 137.50776;            // the golden angle — the Fibonacci twist
 const ease = (p) => p * p * (3 - 2 * p);    // smoothstep
 const clamp01 = (x) => (x < 0 ? 0 : x > 1 ? 1 : x);
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -68,10 +68,10 @@ const ROOTS = AXIS_ORDER.map((axisId, idx) => {
 });
 
 function loadFlower() {
-  try { const v = JSON.parse(localStorage.getItem(FKEY)); if (v && typeof v === 'object') return v; } catch (e) {}
-  return {};
+  const v = store.load(FKEY, {});
+  return v && typeof v === 'object' ? v : {};
 }
-function saveFlower(s) { try { localStorage.setItem(FKEY, JSON.stringify(s)); } catch (e) {} }
+function saveFlower(s) { store.save(FKEY, s); }
 let state = loadFlower();                  // { axisId: {name, role, detail, seated} }
 function petalOf(axisId) { return state[axisId] || (state[axisId] = {}); }
 function isSeated(axisId) { return !!(state[axisId] && state[axisId].seated); }
@@ -420,8 +420,6 @@ function select(axisId) {
   renderEditor();
 }
 
-const esc = (s) => String(s).replace(/"/g, '&quot;');
-
 function renderEditor() {
   editor.classList.add('ed');
   if (selected === '_centre') return renderCentreEditor();
@@ -492,7 +490,7 @@ function renderCentreEditor() {
   const mine = editable();
   const n = seatedCount();
   editor.innerHTML = `
-    <div class="hd"><span class="g">${ci.glyph}</span>${ci.name || 'the centre'}</div>
+    <div class="hd"><span class="g">${esc(ci.glyph)}</span>${esc(ci.name) || 'the centre'}</div>
     <div class="sub">the seventh &middot; the City seal &middot; lights at 6/6 (now ${n}/6)</div>
     ${mine ? `
     <label>name the centre</label>
@@ -517,9 +515,9 @@ function renderLegend() {
   legend.innerHTML = `<h2>${title}</h2><div class="roots">` +
     ROOTS.map((r) => {
       const st = state[r.axisId] || {};
-      const nm = isSeated(r.axisId) ? (st.name || r.canonName) : '<i style="opacity:.6">unseated</i>';
-      return `<div><span class="dot" style="background:${r.colour}"></span><span class="g">${glyphOf(r)}</span>` +
-        `<b>${labelOf(r.axisId)}</b> &middot; ${nm}</div>`;
+      const nm = isSeated(r.axisId) ? esc(st.name || r.canonName) : '<i style="opacity:.6">unseated</i>';
+      return `<div><span class="dot" style="background:${r.colour}"></span><span class="g">${esc(glyphOf(r))}</span>` +
+        `<b>${esc(labelOf(r.axisId))}</b> &middot; ${nm}</div>`;
     }).join('') +
     `</div><p class="prov">the flat thing remembers it was always a star — it only needed enough trust to fold.</p>`;
 }

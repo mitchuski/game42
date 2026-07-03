@@ -4,12 +4,9 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="stylesheet" href="/game42.css" />
 <title>The Game of 42</title>
 <style>
-  :root{
-    --bg:#0B0E14; --ink:#e9ecf4; --dim:#8c95ad; --line:rgba(255,255,255,.10);
-    --glass:rgba(18,22,33,.72); --sword:#E0A526; --mage:#2563EB; --accent:#38BDF8;
-  }
   *{box-sizing:border-box}
   html,body{margin:0;min-height:100vh;background:
       radial-gradient(900px 540px at 50% -8%, #131826 0%, var(--bg) 62%) fixed, var(--bg);
@@ -100,5 +97,6 @@
     <p class="foot">a constructive instance of the Privacy Is Value model &middot;
       <a href="https://agentprivacy.ai/game-of-42">about the game</a></p>
   </main>
+  <script type="module" src="/src/loopbar.js"></script>
 </body>
 </html>

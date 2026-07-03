@@ -11,9 +11,11 @@ import { createControls } from './controls.js';
 import { theme } from './palette.js';
 import { pngExtract } from './pngkey.js';
 import { conformImport } from './conform.js';
+import { GOLDEN_ANGLE } from './canon.js';
+import * as store from './store.js';
 
 const $ = (id) => document.getElementById(id);
-const THETA = 70, TWIST = 138, CHILD = 0.27;
+const THETA = 70, TWIST = GOLDEN_ANGLE, CHILD = 0.27;
 const PARENTS = SLOTS.length; // 42
 const CN = PARENTS * SLOTS.length; // 1764
 
@@ -54,7 +56,7 @@ world.add(star.group);
 
 // ---- the 1764 child stations ---------------------------------------------
 const parentBase = SLOTS.map((s) => foldWorld(s, 1, 1, THETA, TWIST).clone()); // ~radius 2.3
-const childBase = SLOTS.map((c) => foldWorld(c, 1, 1, THETA, TWIST).clone());
+const childBase = parentBase; // a child game folds the same shape, scaled by CHILD
 const baseColor = new Float32Array(CN * 3);
 const clusterOf = new Int16Array(CN);
 const tmp = new THREE.Color();
@@ -114,12 +116,10 @@ world.add(threads);
 
 // grid assignment -> which parent stations light (within the six root constellations)
 function readAssign() {
-  try {
-    const a = JSON.parse(localStorage.getItem('game42.constellation') || '{}');
-    const set = new Set();
-    for (const sl in a) { const i = slotIndex[sl]; if (i !== undefined) set.add(i); }
-    return set;
-  } catch (e) { return new Set(); }
+  const a = store.load('game42.constellation', {}) || {};
+  const set = new Set();
+  for (const sl in a) { const i = slotIndex[sl]; if (i !== undefined) set.add(i); }
+  return set;
 }
 let litParents = readAssign();
 
@@ -138,10 +138,8 @@ function emojiTexture(ch) {
 }
 function cardEmojiMap() {
   const map = {};
-  try {
-    const cards = JSON.parse(localStorage.getItem('game42.grid') || '[]');
-    for (const c of cards) if (c.kappaRaw) map[c.kappaRaw] = { emoji: c.emoji || '', kind: c.kind, name: c.name };
-  } catch (e) {}
+  const cards = store.load('game42.grid', []) || [];
+  for (const c of cards) if (c.kappaRaw) map[c.kappaRaw] = { emoji: c.emoji || '', kind: c.kind, name: c.name };
   return map;
 }
 function rebuildGlyphs() {
@@ -151,7 +149,7 @@ function rebuildGlyphs() {
       if (o.material) { if (o.material.map) o.material.map.dispose(); o.material.dispose(); }
     }
     if (!params.fromGrid) return;
-    const assign = JSON.parse(localStorage.getItem('game42.constellation') || '{}');
+    const assign = store.load('game42.constellation', {}) || {};
     const cards = cardEmojiMap();
     for (const sl in assign) {
       const p = slotIndex[sl]; if (p === undefined) continue;

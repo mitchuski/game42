@@ -16,6 +16,8 @@ import { game42ToCityKey, kappaCity } from './citykey.js';
 import { BOARD_GRAPH, AXIS_GLYPH, TRIAD, theme, THEME_DEFAULTS } from './palette.js';
 import { GAMES, getGame, loadPreset, savePreset } from './presets.js';
 import { personaName, personaGlyph, magesPersonaKey } from './personas.js';
+import { GOLDEN_ANGLE, esc } from './canon.js';
+import * as store from './store.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -23,9 +25,8 @@ const $ = (id) => document.getElementById(id);
 // (game42.merge). The territory shows which roots carry a seated flower.
 // Declared at module top so the animation tick can read `merged` without a TDZ.
 const MERGE_KEY = 'game42.merge';
-const escT = (s) => String(s).replace(/[<>&"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]));
 let merged = {};
-function loadMergeT() { try { merged = JSON.parse(localStorage.getItem(MERGE_KEY)) || {}; } catch (e) { merged = {}; } return merged; }
+function loadMergeT() { merged = store.load(MERGE_KEY, {}) || {}; return merged; }
 
 // ---- boot assertions (BUILD-PLAN Phase 0) --------------------------------
 const errs = bootAssert();
@@ -145,8 +146,8 @@ let game = createGame(SLOTS, AXIS_ORDER);
 // explores locally. `updateHUD` is hoisted, so it is safe to call now.
 const LOCKED_KEY = 'game42.locked';
 function loadLockedSlots() {
-  try { const v = JSON.parse(localStorage.getItem(LOCKED_KEY) || '[]'); return Array.isArray(v) ? v : []; }
-  catch (e) { return []; }
+  const v = store.load(LOCKED_KEY, []);
+  return Array.isArray(v) ? v : [];
 }
 function syncFromMap(rebuild) {
   const locked = loadLockedSlots();
@@ -155,11 +156,24 @@ function syncFromMap(rebuild) {
   updateHUD();
 }
 syncFromMap(false); // seed from whatever the Map has locked
-// fires when the Map (another tab) changes its fills
-window.addEventListener('storage', (e) => { if (e.key === LOCKED_KEY) syncFromMap(true); });
+// live-follow the Map's fills: the storage event covers another tab; focus /
+// visibility cover same-tab navigation. Guarded by a signature so an unchanged
+// set never resets local auto-play exploration.
+let lockedSig = JSON.stringify(loadLockedSlots());
+function maybeSyncFromMap() {
+  const sig = JSON.stringify(loadLockedSlots());
+  if (sig === lockedSig) return;
+  lockedSig = sig;
+  syncFromMap(true);
+}
+window.addEventListener('storage', (e) => { if (e.key === LOCKED_KEY) maybeSyncFromMap(); });
+window.addEventListener('focus', maybeSyncFromMap);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) maybeSyncFromMap(); });
 
 // ---- params (dev controls) ----------------------------------------------
-const params = { thetaMax: 70, twist: 138, breathe: 0.05, spin: 0.18, star: true, starSize: 1.0, coreSpiral: true, reduced: false, manual: false, manualP: 0, focus: false, starMode: 'facet' };
+const params = { thetaMax: 70, twist: GOLDEN_ANGLE, breathe: 0.05, spin: 0.18, star: true, starSize: 1.0, coreSpiral: true, reduced: false, manual: false, manualP: 0, focus: false, starMode: 'facet' };
+// respect the OS preference; the checkbox stays as a manual override either way
+try { params.reduced = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
 star.setMode(params.starMode);
 star.setSize(params.starSize);
 
@@ -193,7 +207,7 @@ canvas.addEventListener('pointermove', (e) => {
     const role = (g.roles && g.roles[s.slotId]) || s.role;
     const per = personaForSlot(s);
     const head = per ? `${per.glyph} ${per.name}` : `${g.axisLabels[s.axisId] || s.axisId} ${AXIS_GLYPH[s.axisId] || ''}`;
-    tip.innerHTML = `<b>${head}</b> · ${cls}<br><span class="d">${role} · ${game.state[s.slotId]}</span>`;
+    tip.innerHTML = `<b>${esc(head)}</b> · ${esc(cls)}<br><span class="d">${esc(role)} · ${game.state[s.slotId]}</span>`;
     tip.style.left = e.clientX + 14 + 'px';
     tip.style.top = e.clientY + 14 + 'px';
     tip.classList.add('show');
@@ -354,6 +368,8 @@ function updateHUD() {
   const bp = game.boardPhase();
   $('sBoard').textContent = `${bp} · ${BOARD_GRAPH[bp]}`;
   $('sSeal').textContent = game.groupSeal ? game.groupSeal.slice(0, 32) + '…' : '—';
+  const bc = $('bCard');
+  if (bc) { bc.disabled = !game.groupSeal; bc.classList.toggle('go', !!game.groupSeal); }
 }
 
 // ---- who-is-where: the named persona seated at a slot, + the live fill log --
@@ -379,10 +395,10 @@ function logFill(act) {
     const per = personaForSlot(s);
     const who = per ? `${per.glyph} ${per.name}` : (s ? s.role : act.slotId);
     const where = s ? ((g.axisLabels && g.axisLabels[s.axisId]) || s.axisId) : '';
-    row.innerHTML = `<span class="lg-who">${who}</span> <span class="lg-verb">${FILL_VERB[act.type] || act.type}</span>` + (where ? ` <span class="lg-where">· ${where}</span>` : '');
+    row.innerHTML = `<span class="lg-who">${esc(who)}</span> <span class="lg-verb">${FILL_VERB[act.type] || act.type}</span>` + (where ? ` <span class="lg-where">· ${esc(where)}</span>` : '');
   } else if (act.axisId) {
     const where = (g.axisLabels && g.axisLabels[act.axisId]) || act.axisId;
-    row.innerHTML = `<span class="lg-where">${where}</span> <span class="lg-verb">${FILL_VERB[act.type] || act.type}</span>`;
+    row.innerHTML = `<span class="lg-where">${esc(where)}</span> <span class="lg-verb">${FILL_VERB[act.type] || act.type}</span>`;
   } else {
     row.innerHTML = `<span class="lg-verb">${FILL_VERB[act.type] || act.type}</span>`;
   }
@@ -500,6 +516,70 @@ async function savePNG() {
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   toast('saved · ' + a.download);
 }
+// ---- the seal card (VISUAL-SPEC §7) ---------------------------------------
+// The payoff artefact: the folded star, ringed by the six axis colours and the
+// 42 who sealed it, stamped with the group seal — and carrying the whole event
+// log (+ the soulbis City-Key projection) in its tEXt chunks. Card = carrier.
+async function saveSealCard() {
+  if (!game.groupSeal) { toast('seal the board first — the card is the seal'); return; }
+  renderer.render(scene, camera);
+  const shot = renderer.domElement;
+  const W = 720, H = 840, cx = W / 2, cy = 402, R = 236;
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const x = cv.getContext('2d');
+  x.fillStyle = theme.ground || '#0b0e14'; x.fillRect(0, 0, W, H);
+  // centre: the live folded render, cropped to a disc
+  const side = Math.min(shot.width, shot.height);
+  x.save(); x.beginPath(); x.arc(cx, cy, R, 0, Math.PI * 2); x.clip();
+  x.drawImage(shot, (shot.width - side) / 2, (shot.height - side) / 2, side, side, cx - R, cy - R, R * 2, R * 2);
+  x.restore();
+  x.beginPath(); x.arc(cx, cy, R, 0, Math.PI * 2);
+  x.strokeStyle = 'rgba(255,255,255,.18)'; x.lineWidth = 1; x.stroke();
+  // six axis arcs on the rim — the heptads that locked
+  AXIS_ORDER.forEach((a, i) => {
+    x.beginPath();
+    x.arc(cx, cy, R + 13, (i / 6) * Math.PI * 2 - Math.PI / 2 + 0.06, ((i + 1) / 6) * Math.PI * 2 - Math.PI / 2 - 0.06);
+    x.strokeStyle = AXIS_BY_ID[a].colour; x.lineWidth = 5; x.lineCap = 'round'; x.stroke();
+  });
+  // the ring of 42 — who sealed each seat, in global fill order
+  x.font = '10px ui-monospace, monospace'; x.textAlign = 'center'; x.textBaseline = 'middle';
+  const ordered = [...SLOTS].sort((p, q) =>
+    (AXIS_ORDER.indexOf(p.axisId) * 7 + p.fillOrder) - (AXIS_ORDER.indexOf(q.axisId) * 7 + q.fillOrder));
+  ordered.forEach((sl, i) => {
+    const per = personaForSlot(sl);
+    const label = String(per ? per.name : sl.role).slice(0, 18);
+    const ang = (i / 42) * Math.PI * 2 - Math.PI / 2;
+    x.save();
+    x.translate(cx + Math.cos(ang) * (R + 38), cy + Math.sin(ang) * (R + 38));
+    x.rotate(ang + Math.PI / 2 + (ang > 0 && ang < Math.PI ? Math.PI : 0)); // lower half stays readable
+    x.fillStyle = AXIS_BY_ID[sl.axisId].colour;
+    x.fillText(label, 0, 0);
+    x.restore();
+  });
+  // header + seal + inscription
+  const g = getGame(activeGame);
+  x.textAlign = 'center';
+  x.fillStyle = '#dfe6ff'; x.font = '600 30px Fraunces, Georgia, serif';
+  x.fillText('the Game of 42 · sealed', cx, 58);
+  x.fillStyle = '#8c95ad'; x.font = '13px ui-monospace, monospace';
+  x.fillText(`${g.name || activeGame} · 42/42 · six heptads locked`, cx, 88);
+  x.fillStyle = theme.sword; x.font = '12px ui-monospace, monospace';
+  x.fillText('seal ' + game.groupSeal.slice(0, 44) + '…', cx, H - 66);
+  x.fillStyle = '#8c95ad';
+  x.fillText('(⚔️⊥⿻⊥🧙)😊 · boundary encodes bulk', cx, H - 40);
+  // the card IS the carrier: same chunks as Save PNG
+  const cfg = currentCfg();
+  const city = game42ToCityKey(game, { preset: activeGame, seal: game.groupSeal, savedAt: cfg.savedAt });
+  city.kappa = await kappaCity(city);
+  const blob = pngEmbed(cv.toDataURL('image/png'), cfg, [{ keyword: 'cityKey', cfg: city }]);
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'game-of-42-seal-card-' + game.groupSeal.slice(0, 8) + '.png';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  toast('seal card saved — it carries the whole log');
+}
+
 function loadCfg(cfg) {
   if (!cfg || !Array.isArray(cfg.log)) {
     toast('no game42 log in this file');
@@ -544,6 +624,7 @@ $('bStep').addEventListener('click', () => stepOnce());
 $('bPlay').addEventListener('click', play);
 $('bReset').addEventListener('click', reset);
 $('bSave').addEventListener('click', savePNG);
+$('bCard').addEventListener('click', saveSealCard);
 $('bLoad').addEventListener('click', () => $('fLoad').click());
 $('fLoad').addEventListener('change', (e) => {
   const f = e.target.files[0];
@@ -562,7 +643,7 @@ function bindSlider(id, key, fmt) {
 }
 bindSlider('rP', 'manualP', (v) => v.toFixed(2));
 bindSlider('rTheta', 'thetaMax', (v) => String(v | 0));
-bindSlider('rTwist', 'twist', (v) => String(v | 0));
+bindSlider('rTwist', 'twist', (v) => v.toFixed(1));
 bindSlider('rBreathe', 'breathe', (v) => v.toFixed(2));
 bindSlider('rSpin', 'spin', (v) => v.toFixed(2));
 (function () {
@@ -572,6 +653,7 @@ bindSlider('rSpin', 'spin', (v) => v.toFixed(2));
 })();
 $('tStar').addEventListener('change', (e) => (params.star = e.target.checked));
 $('tCore').addEventListener('change', (e) => (params.coreSpiral = e.target.checked));
+$('tReduce').checked = params.reduced;
 $('tReduce').addEventListener('change', (e) => (params.reduced = e.target.checked));
 $('tManual').addEventListener('change', (e) => (params.manual = e.target.checked));
 $('bFold').addEventListener('click', () => { $('console').classList.add('folded'); $('launcher').classList.add('show'); });
@@ -590,8 +672,8 @@ function openInspect(s) {
   const force = AXIS_GLYPH[s.axisId] ? ' ' + AXIS_GLYPH[s.axisId] : '';
   const ground = s.faculty.map((f) => (TRIAD.find((t) => t.faculty === f) || {}).ground).join('+');
   $('inspMeta').innerHTML =
-    `<b>${role}</b> · ${cls}<br>` +
-    `axis <b>${axisLbl}${force}</b> · seat <b>${s.slotId}</b><br>` +
+    `<b>${esc(role)}</b> · ${esc(cls)}<br>` +
+    `axis <b>${esc(axisLbl)}${force}</b> · seat <b>${s.slotId}</b><br>` +
     `state <b>${game.state[s.slotId]}</b> · fill #${s.fillOrder}` +
     `<div><span class="chip">${s.faculty.join('+')}</span><span class="chip">${ground}</span>` +
     `<span class="chip">lattice v${s.latticeAxisVertex}</span></div>` +
@@ -656,7 +738,7 @@ function applyPreset(id) {
   board.relabelRoots(g);
   board.setAccent(g.accent);
   savePreset(id);
-  $('presetTag').innerHTML = `${g.glyph} <b style="color:var(--ink)">${g.name}</b> — ${g.tagline}`;
+  $('presetTag').innerHTML = `${esc(g.glyph)} <b style="color:var(--ink)">${esc(g.name)}</b> — ${esc(g.tagline)}`;
   document.querySelectorAll('#preset button').forEach((b) => b.classList.toggle('on', b.dataset.g === id));
 }
 document.querySelectorAll('#preset button').forEach((b) => b.addEventListener('click', () => applyPreset(b.dataset.g)));
@@ -669,7 +751,7 @@ function renderAxisLegend() {
     const ax = AXIS_BY_ID[a];
     const force = AXIS_GLYPH[a] ? ' ' + AXIS_GLYPH[a] : '';
     const s = merged[a];
-    const seat = s ? ` <b style="color:#cfe0ff" title="seated flower · κ ${escT((s.kappa || '').slice(0, 8))}">${escT(s.glyph || '🌸')} ${escT(s.name)}</b>` : '';
+    const seat = s ? ` <b style="color:#cfe0ff" title="seated flower · κ ${esc((s.kappa || '').slice(0, 8))}">${esc(s.glyph || '🌸')} ${esc(s.name)}</b>` : '';
     return `<span><i style="background:${ax.colour}"></i>${a}${force}${seat}</span>`;
   }).join('');
 }
@@ -700,12 +782,19 @@ function exitFocus() { params.focus = false; document.body.classList.remove('foc
 function toggleFocus() { params.focus ? exitFocus() : enterFocus(); }
 $('bFocus').addEventListener('click', toggleFocus);
 focusBadge.addEventListener('click', exitFocus);
+const keysOverlay = $('keys');
+function toggleKeys() { if (keysOverlay) keysOverlay.classList.toggle('show'); }
+if (keysOverlay) keysOverlay.addEventListener('click', () => keysOverlay.classList.remove('show'));
 document.addEventListener('keydown', (e) => {
   const tag = (e.target && e.target.tagName) || '';
   if (tag === 'INPUT' || tag === 'TEXTAREA') return;
   if (e.key === 'f' || e.key === 'F') { e.preventDefault(); toggleFocus(); }
   else if (e.key === 's' || e.key === 'S') { e.preventDefault(); savePNG(); }
-  else if (e.key === 'Escape' && params.focus) exitFocus();
+  else if (e.key === '?') { e.preventDefault(); toggleKeys(); }
+  else if (e.key === 'Escape') {
+    if (keysOverlay && keysOverlay.classList.contains('show')) keysOverlay.classList.remove('show');
+    else if (params.focus) exitFocus();
+  }
 });
 document.addEventListener('mousemove', () => { if (params.focus) flashBadge(1800); });
 

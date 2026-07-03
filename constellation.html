@@ -4,9 +4,9 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="stylesheet" href="/game42.css" />
 <title>The Game of 42 — Constellation</title>
 <style>
-  :root{ --bg:#0B0E14; --ink:#e9ecf4; --dim:#8c95ad; --line:rgba(255,255,255,.10); --glass:rgba(18,22,33,.72); --accent:#38BDF8; }
   *{box-sizing:border-box}
   html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);overflow:hidden;
     font:13px/1.5 ui-monospace,"Spline Sans Mono",Menlo,Consolas,monospace}
@@ -43,8 +43,6 @@
     border:1px solid var(--line);border-radius:20px;padding:6px 14px;color:var(--ink);font-size:11px;opacity:0;
     pointer-events:none;transition:opacity .5s;backdrop-filter:blur(8px)}
   .focusbadge.show{opacity:.82;pointer-events:auto;cursor:pointer}
-  #err{display:none;position:fixed;left:12px;bottom:40px;max-width:60vw;z-index:30;margin:0;padding:10px 12px;
-    background:rgba(40,8,8,.92);border:1px solid #a33;border-radius:10px;color:#ffb4b4;font:11px/1.45 ui-monospace,monospace;white-space:pre-wrap}
 </style>
 <script>
   window.__gerr=function(m){try{let d=document.getElementById('err');if(!d){d=document.createElement('pre');d.id='err';document.body.appendChild(d);}d.style.display='block';d.textContent='⚠ '+m;}catch(e){}};
@@ -70,7 +68,7 @@
     <label class="t"><input id="tWave" type="checkbox" checked> light wave</label>
     <label class="t"><input id="tGrid" type="checkbox" checked> light from collection</label>
     <label class="t"><input id="tFlow" type="checkbox" checked> core flow (duos)</label>
-    <div class="seg" id="starMode"><button data-m="facet" class="on">facet</button><button data-m="surface">surface</button><button data-m="wire">wire</button></div>
+    <div class="seg" id="starMode" role="group" aria-label="star render mode"><button data-m="facet" class="on">facet</button><button data-m="surface">surface</button><button data-m="wire">wire</button></div>
     <div class="row"><label>star size</label><input id="rStarSize" type="range" min="0.5" max="4" step="0.1" value="2.6"></div>
     <button id="bKey">&#11088; add star</button>
     <button id="bFocus">&#127916; focus (F)</button>
@@ -80,5 +78,6 @@
   <div id="hint">drag to orbit &middot; scroll to zoom &middot; <b style="color:#cfe0ff">F</b> focus</div>
   <div class="focusbadge" id="focusbadge">focus &middot; tap / Esc / F to exit</div>
   <script type="module" src="/src/constellation.js"></script>
+  <script type="module" src="/src/loopbar.js"></script>
 </body>
 </html>
