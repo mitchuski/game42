@@ -464,6 +464,7 @@ function stopPlay() {
   $('bPlay').innerHTML = '&#9654; Auto-play';
 }
 
+let sealedAt = null; // ISO moment the board sealed — V6 (MODEL-SYNC §4b): a seal is dated, not timeless
 async function finalizeSeal() {
   const labels = SLOTS.map((s) => game.kappa[s.slotId]).filter(Boolean);
   if (labels.length !== 42) {
@@ -473,6 +474,7 @@ async function finalizeSeal() {
   const gh = await geometryHash(board.snapshotAtP1(params.thetaMax, params.twist));
   const seal = await groupSeal(labels, gh);
   game.setGroupSeal(seal);
+  sealedAt = new Date().toISOString();
   logFill({ text: '✦ board sealed · ' + seal.slice(0, 12) + '…' });
   updateHUD();
   toast('game sealed · ' + seal.slice(0, 12) + '…');
@@ -488,6 +490,7 @@ function currentCfg() {
     inscription: '(⚔️⊥⿻⊥🧙)😊',
     preset: activeGame,
     seal: game.groupSeal || null,
+    sealedAt: sealedAt || null,
     p: game.p(),
     log: game.log,
   };
@@ -563,10 +566,14 @@ async function saveSealCard() {
   x.fillText('the Game of 42 · sealed', cx, 58);
   x.fillStyle = '#8c95ad'; x.font = '13px ui-monospace, monospace';
   x.fillText(`${g.name || activeGame} · 42/42 · six heptads locked`, cx, 88);
+  const sealDate = (sealedAt || new Date().toISOString()).slice(0, 10);
   x.fillStyle = theme.sword; x.font = '12px ui-monospace, monospace';
   x.fillText('seal ' + game.groupSeal.slice(0, 44) + '…', cx, H - 66);
   x.fillStyle = '#8c95ad';
-  x.fillText('(⚔️⊥⿻⊥🧙)😊 · boundary encodes bulk', cx, H - 40);
+  x.fillText('(⚔️⊥⿻⊥🧙)😊 · boundary encodes bulk · sealed ' + sealDate, cx, H - 40);
+  // V6 shelf life (MODEL-SYNC §4b) — quiet, secondary; the hash + inscription stay the focus
+  x.fillStyle = 'rgba(140,149,173,.55)'; x.font = '10px ui-monospace, monospace';
+  x.fillText('a seal holds while R(t) < 1 — re-keying is a move, not a failure', cx, H - 18);
   // the card IS the carrier: same chunks as Save PNG
   const cfg = currentCfg();
   const city = game42ToCityKey(game, { preset: activeGame, seal: game.groupSeal, savedAt: cfg.savedAt });
@@ -589,6 +596,7 @@ function loadCfg(cfg) {
   game = createGame(SLOTS, AXIS_ORDER);
   for (const ev of cfg.log) game.dispatch(ev);
   if (cfg.seal) game.setGroupSeal(cfg.seal);
+  sealedAt = cfg.seal ? (cfg.sealedAt || cfg.savedAt || null) : null;
   if (cfg.preset && GAMES[cfg.preset]) applyPreset(cfg.preset);
   updateHUD();
   toast('loaded · ' + cfg.log.length + ' events' + (cfg.seal ? ' · sealed' : ''));
@@ -597,6 +605,7 @@ function loadCfg(cfg) {
 function reset() {
   stopPlay();
   game = createGame(SLOTS, AXIS_ORDER);
+  sealedAt = null;
   clearFillLog();
   updateHUD();
   toast('reset · empty board');
