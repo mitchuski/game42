@@ -30,7 +30,7 @@ The VRC is compressed to a kappa-label: a content-addressed seal over its canoni
 kappa = SHA-256( canonical(VRC) )
 ```
 
-`canonical` is defined in `canonical_serialise.py`: sorted keys, compact separators `(",", ":")`, the `kappa` and `vrcId` fields excluded from their own input, UTF-8. This rule is canonical 0xagentprivacy serialisation and must be documented to any third-party verifier to prevent false negatives.
+`canonical` is defined in `canonical_serialise.py`: sorted keys, compact separators `(",", ":")`, the four self-referential fields `kappa`, `seal`, `vrcId`, `gameId` excluded from their own input (corrected 2026-07-18 to match the reference code and AXIOMS A3 — the prose previously named only two), UTF-8. This rule is canonical 0xagentprivacy serialisation and must be documented to any third-party verifier to prevent false negatives.
 
 Filling a slot is: pass the task, issue the VRC, compute the kappa-label, advance the slot to `verified`.
 

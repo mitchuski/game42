@@ -19,6 +19,11 @@ function enc(o) {
     const keys = Object.keys(o).sort();
     return '{' + keys.map((k) => JSON.stringify(k) + ':' + enc(o[k])).join(',') + '}';
   }
+  // Conformance note (2026-07-18, pipeline L157): VERIFIED byte-identical to the Python
+  // reference (json.dumps ensure_ascii=False) on non-ASCII content — both emit raw UTF-8
+  // (vectors: "café" 22636166c3a922, "é中文🐉" 22c3a9e4b8ade69687f09f908922, "\x1f" 225c753030316622).
+  // Sole residual divergence: lone surrogates (invalid Unicode) — JS escapes them (ES2019
+  // well-formed stringify), Python raises on UTF-8 encode. Keep payloads valid Unicode.
   if (t === 'string') return JSON.stringify(o);
   if (t === 'boolean') return o ? 'true' : 'false';
   return String(o); // numbers — stringify upstream for cross-impl determinism
