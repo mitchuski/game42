@@ -48,6 +48,7 @@
   window.__gerr=function(m){try{let d=document.getElementById('err');if(!d){d=document.createElement('pre');d.id='err';document.body.appendChild(d);}d.style.display='block';d.textContent='⚠ '+m;}catch(e){}};
   window.addEventListener('error',e=>window.__gerr((e.message||e.type)+'\n'+((e.error&&e.error.stack)||(e.filename+':'+e.lineno))));
 </script>
+<link rel="stylesheet" href="/release.css" />
 </head>
 <body>
   <canvas id="scene"></canvas>
@@ -77,7 +78,7 @@
   </aside>
   <div id="hint">drag to orbit &middot; scroll to zoom &middot; <b style="color:#cfe0ff">F</b> focus</div>
   <div class="focusbadge" id="focusbadge">focus &middot; tap / Esc / F to exit</div>
-  <script type="module" src="/src/constellation.js"></script>
+  <script type="module" src="/src/instrument-boot.js"></script>
   <script type="module" src="/src/loopbar.js"></script>
 </body>
 </html>

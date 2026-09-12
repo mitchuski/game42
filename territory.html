@@ -133,13 +133,14 @@
   #tip.show{opacity:.96}
   #tip .d{color:var(--dim)}
 </style>
+<link rel="stylesheet" href="/release.css" />
 </head>
 <body>
   <canvas id="scene"></canvas>
 
   <div id="title">
     <h1>The Game of 42 &middot; territory</h1>
-    <p>the runtime &middot; agents fill the 42 seats &middot; the board folds to the star</p>
+    <p>Practice assembly · synthetic task records show how the board folds</p>
     <nav class="pagenav"><a href="./index.html">menu</a><a href="./flower.html">flower</a><a href="./map.html">map</a><a href="./territory.html" class="on">territory</a><a href="./constellation.html">constellation</a><a href="./grid.html">grid</a></nav>
   </div>
 
@@ -147,7 +148,7 @@
 
   <aside id="console">
     <div class="grp">
-      <h2>Play &middot; the runtime</h2>
+      <h2>Practice &middot; the assembly</h2>
       <div class="btns">
         <button id="bIgnite" title="light the six axis roots — each opens a heptad of 7 empty seats">Ignite roots</button>
         <button id="bStep" title="fill the next seat in order: 3 vision fish → 3 mice → the guide last">Step fill</button>
@@ -155,7 +156,7 @@
         <button id="bReset" title="clear the board back to seeded — every seat empty">Reset</button>
         <button id="bFocus" title="hide the chrome, keep the sculpture turning (press F)">&#127916; Focus (F)</button>
       </div>
-      <p class="caption"><b>Ignite</b> opens the six axes — each is a heptad of 7 seats. Then <b>step</b> or <b>auto-play</b> sends agents to the seats in fill order; the keystone <b>guide</b> seals last. A seat only advances once its trust task verifies. Hover any seat to see who's there.</p>
+      <p class="caption"><b>Ignite</b> opens the six axes — each is a heptad of 7 seats. Then <b>step</b> or <b>auto-play</b> sends agents to the seats in fill order; the keystone <b>guide</b> seals last. The checks in this simulation use demo credentials. Hover any seat to see who's there.</p>
     </div>
 
     <div class="grp">
@@ -182,14 +183,18 @@
     <div class="grp">
       <h2>Carry</h2>
       <div class="btns">
-        <button id="bSave" title="save the board as a PNG that carries the whole event log">&#128247; Save PNG</button>
-        <button id="bCard" disabled title="the shareable seal card — folded star, axis ring, the 42, the seal (enabled once the board seals)">&#10038; Seal card</button>
+        <button id="bPicture">Picture only</button>
+        <button id="bSave" title="save the board as a PNG that carries the whole event log">Preview replay backup</button>
+        <button id="bCard" disabled title="the shareable seal card — folded star, axis ring, the 42, the seal (enabled once the board seals)">Preview practice seal card</button>
         <button id="bLoad" title="load a saved game PNG / JSON — replays its log">&#8682; Load PNG</button>
         <input id="fLoad" type="file" accept="image/png,application/json">
       </div>
-      <div class="caption" style="font-size:10px;margin-top:8px">A sealed game carries a shelf life <b>t*</b> — the seal holds while R(t)&nbsp;&lt;&nbsp;1, and the card is stamped with its date. When the board changes, seal it again: re-keying is part of the game, not a failure of it.</div>
+      <div class="caption" style="font-size:10px;margin-top:8px">A practice seal fingerprints recorded content. It does not certify identity, evidence freshness or a privacy guarantee. Time-based model views are separate from credential status.
+      </div>
     </div>
 
+    <p id="importStatus" role="status" aria-live="polite"></p>
+    <p class="caption"><a href="./map.html?start#journey">Choose a selected task reading →</a></p>
     <details class="tune">
     <summary>Tune &middot; fold, feel &amp; colours</summary>
     <div class="grp" style="margin-top:10px">
@@ -284,7 +289,7 @@
   <div id="hint">drag to orbit &middot; scroll to zoom &middot; tap a slot to inspect &middot; <b style="color:#cfe0ff">?</b> keys</div>
   <div id="diag">booting&hellip;</div>
 
-  <script type="module" src="/src/main.js"></script>
+  <script type="module" src="/src/instrument-boot.js"></script>
   <script type="module" src="/src/loopbar.js"></script>
 </body>
 </html>

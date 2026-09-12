@@ -57,13 +57,11 @@ export function game42ToCityKey(game, opts) {
     version: 1,
     palette: CARRIER_PALETTE,
     lit,
-    // the seal IS the digest over all 42 κ-labels + geometryHash — carry it as the
-    // trust-task proof root; /star carries `packets` through untouched, /city charges it.
-    packets: { root: seal, count: game.sealedCount() },
-    // the sealed slots are proven focus — chargeable like any walked key
-    witness: { spent: full ? { '63': 42 } : {}, complete: full, at: savedAt },
+    // Practice completion is presentation only. Do not populate legacy charge
+    // fields (`packets` / `witness`) that existing City consumers may credit.
+    practice: { mode: 'practice', seal, completedSlots: game.sealedCount(), at: savedAt },
     // descriptive only — game42's own framing, never hashed into identity meaning
-    source: { kind: 'game-of-42', preset, axisBitmask },
+    source: { kind: 'game-of-42', preset, axisBitmask, evidenceStatus: 'practice-unverified' },
   };
   if (prior) cfg.prior = prior; // optional κ-chain: forge V1 -> V2 -> … (gold lineage thread in /skye)
   return cfg;

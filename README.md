@@ -1,6 +1,20 @@
 # The Game of 42
 
-## source docs for a coding agent
+**12 September 2026 local candidate:** the interface now treats the game as an explicit practice assembly with a source-linked first task and deliberate export previews. Demo completion does not establish verified identity, community membership or contribution credit. See [the release record](RELEASE-2026-09-12.md) for implemented changes, compatibility and remaining integrations. The historical specification below describes the intended connected model; its issuer and governance claims are not claims that those services are live.
+
+## Play, sign, receive, retain
+
+The landing now includes a moving Soulbis-derived Star/manifold with pause, reduced motion and a Six axes explanation view. [Star math and carry boundaries](STAR-MATH-AND-CARRY.md) records the equations, presentation parameters, byte-volume scaling and permitted data flow. The bottom-right Your Star panel uses the extension's existing site-persona interface on explicit request; it does not yet authenticate a session or save game records into Hold.
+
+The next connected journey is **Game → Star Key → Hearthold → Star Hold**. A participant prepares a source-linked contribution, chooses the disclosed record and approves signing in the extension. Hearthold verifies the presentation and enforces consent at the receiving action. A durable receipt and the original signed contribution are retained privately in Star Hold; the Star presents their individual check results.
+
+The current game provides local practice, review and export. Its City Key hashing passes the shared Hearthold fixtures. Extension signing, remote execution and private Hold retention are not connected to this game yet.
+
+Territory's planned hosting interface lets a human or agent guide turns and prepare tasks. Participants retain their commitments and signing decisions; reviewers attest to their own review. Agent summaries, contributor assertions and receiver receipts are distinct records.
+
+Read [the encounter contract](HEARTHOLD-ENCOUNTER.md) before implementing that connection. It specifies consent, signer checks, receipt binding, retries, key evolution and acceptance tests. [Hearthold PR #91](https://github.com/Flaxscrip/hearthold/pull/91) provides the initial import compatibility work. A matching fingerprint or valid signature does not grant membership, acceptance or access.
+
+## Historical assembly specification
 
 A governance assembly mechanic and its visualisation. Six root home bases ignite, each grows a heptad of seven, six heptads of seven make forty-two, and a completed game of 42 seals into one group identity shape that becomes a node in a network of trust graphs.
 

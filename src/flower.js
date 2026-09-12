@@ -20,6 +20,7 @@ import { pngEmbed } from './pngkey.js';
 // angle, and the shared HTML-escape all come from the one canon module.
 import { AXIS_VERTEX, GOLDEN_ANGLE as GOLDEN, esc } from './canon.js';
 import * as store from './store.js';
+import { previewDownload } from './carry.js';
 
 const errs = bootAssert();
 if (errs.length) console.warn('[flower] boot assertions:', errs);
@@ -332,7 +333,7 @@ function flowerArtefact() {
     mages[r.axisId] = { label: labels[r.axisId] || r.axisId, glyph: glyphOf(r), name: st.name || r.canonName, role: st.role || '', detail: st.detail || '' };
   }
   return {
-    kind: 'flower42', preset: presetId,
+    kind: 'flower42', mode: 'practice', evidenceStatus: 'planning-only', preset: presetId,
     name: ci.name || (presetId === 'mine' ? 'my flower' : 'the City of Mages'),
     glyph: ci.glyph, tagline: 'a 6 + 1 flower of the Game of 42',
     axisBitmask: bitmask,
@@ -360,16 +361,11 @@ async function captureFlower() {
   x.font = '26px serif'; x.fillStyle = '#fff'; x.fillText(art.glyph, cx, cy);
   x.fillStyle = '#dfe6ff'; x.font = '600 24px Georgia, serif'; x.fillText(art.name, cx, 54);
   x.fillStyle = '#8c95ad'; x.font = '12px ui-monospace, monospace';
-  x.fillText('a 6 + 1 flower · ' + (art.axisBitmask === 63 ? 'whole' : seatedCount() + '/6'), cx, 84);
+  x.fillText('practice plan · ' + seatedCount() + '/6 roles', cx, 84);
   x.fillText('κ ' + seal.slice(0, 32) + '…', cx, H - 28);
   const blob = pngEmbed(cv.toDataURL('image/png'), art);
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = art.name.replace(/[^a-z0-9]+/gi, '-').toLowerCase() + '-flower.png';
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-  captureBtn.textContent = '✓ captured';
-  setTimeout(() => { captureBtn.innerHTML = '📸 capture'; }, 1800);
+  previewDownload({ title: 'Six-role planning backup', description: 'This PNG embeds every role, name and detail below. It is a practice plan, not a completed assembly or City Key.',
+    payload: {game42:art}, blob, filename:'game42-practice-flower.png' });
 }
 
 // ---- emoji picker -----------------------------------------------------------
@@ -530,7 +526,7 @@ function renderStrip() {
   captureBtn.disabled = n < 6;
   sealEl.innerHTML = n < 6
     ? `the seal waits on the seventh — <b>${6 - n}</b> mage${6 - n === 1 ? '' : 's'} still to choose`
-    : `<b>the City is whole.</b> fold to preview the seal, or open the full 42 to fill all forty-two stations.`;
+    : `<b>Your six-role plan is ready.</b> Preview the fold or explore the 42 stations. A plan does not establish community membership.`;
 }
 
 function renderAll() { renderStrip(); renderLegend(); renderEditor(); }

@@ -18,6 +18,8 @@ import { GAMES, getGame, loadPreset, savePreset } from './presets.js';
 import { personaName, personaGlyph, magesPersonaKey } from './personas.js';
 import { GOLDEN_ANGLE, esc } from './canon.js';
 import * as store from './store.js';
+import { replayPractice } from './replay.js';
+import { previewDownload } from './carry.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -138,6 +140,8 @@ const visHept = Object.fromEntries(AXIS_ORDER.map((a) => [a, 0]));
 
 // ---- game state (mutable; reset replaces it) -----------------------------
 let game = createGame(SLOTS, AXIS_ORDER);
+let sealGeometry = null;
+let carriedReplay = {};
 
 // ---- follow the Map's fills --------------------------------------------------
 // The Map (map.html) writes its locked/lit slots to localStorage as
@@ -174,6 +178,7 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) mayb
 const params = { thetaMax: 70, twist: GOLDEN_ANGLE, breathe: 0.05, spin: 0.18, star: true, starSize: 1.0, coreSpiral: true, reduced: false, manual: false, manualP: 0, focus: false, starMode: 'facet' };
 // respect the OS preference; the checkbox stays as a manual override either way
 try { params.reduced = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+window.addEventListener('game42-motion',e=>{params.reduced=e.detail;$('tReduce').checked=e.detail;});
 star.setMode(params.starMode);
 star.setSize(params.starSize);
 
@@ -236,7 +241,7 @@ const gl = renderer.getContext();
 const glInfo = gl ? 'webgl ok' : 'NO WEBGL';
 function tick() {
   try {
-    const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
+    const dt = Math.min(clock.getDelta(), 0.05), t = params.reduced ? 0 : clock.elapsedTime;
     controls.update(dt);
 
     // decide the fold TARGET: manual / live game / latent (intro flourish or breath)
@@ -366,7 +371,7 @@ function updateHUD() {
   const locked = AXIS_ORDER.filter((a) => game.heptadPhase(a) === 'locked').length;
   $('sHept').textContent = `${locked} / 6`;
   const bp = game.boardPhase();
-  $('sBoard').textContent = `${bp} · ${BOARD_GRAPH[bp]}`;
+  $('sBoard').textContent = `${bp} · practice assembly`;
   $('sSeal').textContent = game.groupSeal ? game.groupSeal.slice(0, 32) + '…' : '—';
   const bc = $('bCard');
   if (bc) { bc.disabled = !game.groupSeal; bc.classList.toggle('go', !!game.groupSeal); }
@@ -382,7 +387,7 @@ function personaForSlot(s) {
   if (!key) return null;
   return { key, name: personaName(key), glyph: personaGlyph(key) };
 }
-const FILL_VERB = { ROOT_IGNITE: 'ignited', FISH_PROPOSE: 'proposed', TASK_START: 'started work', TASK_VERIFY: 'verified', SLOT_SEAL: 'sealed', BOARD_SEAL: 'board sealed' };
+const FILL_VERB = { ROOT_IGNITE: 'ignited', FISH_PROPOSE: 'proposed', TASK_START: 'started practice', TASK_VERIFY: 'demo check recorded', SLOT_SEAL: 'practice complete', BOARD_SEAL: 'practice board complete' };
 function logFill(act) {
   const box = $('filllog'); if (!box || !act) return;
   const empty = box.querySelector('.logempty'); if (empty) empty.remove();
@@ -471,9 +476,11 @@ async function finalizeSeal() {
     toast(`seal needs 42 labels, have ${labels.length}`);
     return;
   }
-  const gh = await geometryHash(board.snapshotAtP1(params.thetaMax, params.twist));
+  const geometry = { thetaMax: params.thetaMax, twist: params.twist };
+  const gh = await geometryHash(board.snapshotAtP1(geometry.thetaMax, geometry.twist));
   const seal = await groupSeal(labels, gh);
   game.setGroupSeal(seal);
+  sealGeometry = geometry;
   sealedAt = new Date().toISOString();
   logFill({ text: '✦ board sealed · ' + seal.slice(0, 12) + '…' });
   updateHUD();
@@ -483,7 +490,11 @@ async function finalizeSeal() {
 // ---- carry: save / load PNG ---------------------------------------------
 function currentCfg() {
   return {
+    ...carriedReplay,
     version: 1,
+    mode: 'practice',
+    evidenceStatus: 'unverified',
+    sealGeometry,
     kind: 'game-of-42',
     name: 'game of 42',
     savedAt: new Date().toISOString(),
@@ -510,14 +521,18 @@ async function savePNG() {
     extras.push({ keyword: 'cityKey', cfg: city });
   }
   const blob = pngEmbed(url, cfg, extras);
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'game-of-42' + (game.groupSeal ? '-' + game.groupSeal.slice(0, 8) : '') + '.png';
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-  toast('saved · ' + a.download);
+  previewDownload({ title: 'Full practice replay backup',
+    description: 'This PNG embeds the complete event log and, when sealed, a practice City Key projection. Both chunks are readable by anyone holding the file. This is not verified standing. Map-only lighting is a view and is not part of this replay.',
+    payload: { game42: cfg, ...Object.fromEntries(extras.map(e => [e.keyword, e.cfg])) }, blob, filename: 'game42-practice-backup.png' });
+}
+function savePicture() {
+  renderer.render(scene, camera);
+  // Raster copy with a visible practice label; no metadata chunks are embedded.
+  const cv = document.createElement('canvas'); cv.width = canvas.width; cv.height = canvas.height;
+  const x = cv.getContext('2d'); x.drawImage(canvas,0,0);
+  x.fillStyle='#080e18'; x.fillRect(0,cv.height-54,cv.width,54);
+  x.fillStyle='#f0eee8'; x.font='20px sans-serif'; x.fillText('GAME OF 42 · PRACTICE ASSEMBLY',20,cv.height-20);
+  cv.toBlob(blob => { if (blob) previewDownload({title:'Picture only',description:'A visible practice image. No embedded replay or City Key.',blob,filename:'game42-practice-picture.png'}); },'image/png');
 }
 // ---- the seal card (VISUAL-SPEC §7) ---------------------------------------
 // The payoff artefact: the folded star, ringed by the six axis colours and the
@@ -563,7 +578,7 @@ async function saveSealCard() {
   const g = getGame(activeGame);
   x.textAlign = 'center';
   x.fillStyle = '#dfe6ff'; x.font = '600 30px Fraunces, Georgia, serif';
-  x.fillText('the Game of 42 · sealed', cx, 58);
+  x.fillText('the Game of 42 · practice', cx, 58);
   x.fillStyle = '#8c95ad'; x.font = '13px ui-monospace, monospace';
   x.fillText(`${g.name || activeGame} · 42/42 · six heptads locked`, cx, 88);
   const sealDate = (sealedAt || new Date().toISOString()).slice(0, 10);
@@ -573,39 +588,41 @@ async function saveSealCard() {
   x.fillText('(⚔️⊥⿻⊥🧙)😊 · boundary encodes bulk · sealed ' + sealDate, cx, H - 40);
   // V6 shelf life (MODEL-SYNC §4b) — quiet, secondary; the hash + inscription stay the focus
   x.fillStyle = 'rgba(140,149,173,.55)'; x.font = '10px ui-monospace, monospace';
-  x.fillText('a seal holds while R(t) < 1 — re-keying is a move, not a failure', cx, H - 18);
+  x.fillText('Content fingerprint only · no verified identity or contribution credit', cx, H - 18);
   // the card IS the carrier: same chunks as Save PNG
   const cfg = currentCfg();
   const city = game42ToCityKey(game, { preset: activeGame, seal: game.groupSeal, savedAt: cfg.savedAt });
   city.kappa = await kappaCity(city);
   const blob = pngEmbed(cv.toDataURL('image/png'), cfg, [{ keyword: 'cityKey', cfg: city }]);
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'game-of-42-seal-card-' + game.groupSeal.slice(0, 8) + '.png';
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-  toast('seal card saved — it carries the whole log');
+  previewDownload({title:'Practice seal card with full replay',description:'The card embeds both the complete game log and a practice City Key projection. Review both before downloading.',
+    payload:{game42:cfg,cityKey:city},blob,filename:'game42-practice-seal-card.png'});
 }
 
-function loadCfg(cfg) {
-  if (!cfg || !Array.isArray(cfg.log)) {
-    toast('no game42 log in this file');
-    return;
-  }
+async function loadCfg(cfg) {
   stopPlay();
-  game = createGame(SLOTS, AXIS_ORDER);
-  for (const ev of cfg.log) game.dispatch(ev);
-  if (cfg.seal) game.setGroupSeal(cfg.seal);
-  sealedAt = cfg.seal ? (cfg.sealedAt || cfg.savedAt || null) : null;
-  if (cfg.preset && GAMES[cfg.preset]) applyPreset(cfg.preset);
-  updateHUD();
-  toast('loaded · ' + cfg.log.length + ' events' + (cfg.seal ? ' · sealed' : ''));
+  if (busy) return toast('Wait for the current practice step, then import again.');
+  busy = true;
+  try {
+    const geom = cfg?.sealGeometry || {thetaMax:70,twist:GOLDEN_ANGLE};
+    if (!Number.isFinite(geom.thetaMax) || !Number.isFinite(geom.twist) || Math.abs(geom.thetaMax)>360 || Math.abs(geom.twist)>720) throw new Error('Unsupported seal geometry.');
+    const result = await replayPractice(cfg,SLOTS,AXIS_ORDER,board.snapshotAtP1(geom.thetaMax,geom.twist));
+    game = result.game;
+    carriedReplay = structuredClone(cfg);
+    sealGeometry = cfg.seal ? geom : null;
+    sealedAt = cfg.seal ? (cfg.sealedAt || cfg.savedAt || null) : null;
+    if (cfg.preset && GAMES[cfg.preset]) applyPreset(cfg.preset);
+    updateHUD(); toast(result.status);
+    $('importStatus').textContent = result.status;
+  } catch (err) { $('importStatus').textContent = err.message; toast(err.message); }
+  finally { busy = false; }
 }
 
 function reset() {
+  if (busy) return toast('Wait for the current step before resetting.');
   stopPlay();
   game = createGame(SLOTS, AXIS_ORDER);
   sealedAt = null;
+  sealGeometry = null; carriedReplay = {};
   clearFillLog();
   updateHUD();
   toast('reset · empty board');
@@ -633,6 +650,7 @@ $('bStep').addEventListener('click', () => stepOnce());
 $('bPlay').addEventListener('click', play);
 $('bReset').addEventListener('click', reset);
 $('bSave').addEventListener('click', savePNG);
+$('bPicture').addEventListener('click', savePicture);
 $('bCard').addEventListener('click', saveSealCard);
 $('bLoad').addEventListener('click', () => $('fLoad').click());
 $('fLoad').addEventListener('change', (e) => {

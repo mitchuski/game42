@@ -210,6 +210,8 @@ function rebuild(spread) {
 
 // ---- params + controls ----------------------------------------------------
 const params = { spin: 0, focus: false, spread: 1.8, lit: 42, star: true, threads: true, wave: true, fromGrid: true, coreFlow: true, minDist: 2, maxDist: 140, startDist: 12 };
+params.reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+window.addEventListener('game42-motion', e => { params.reduced = e.detail; });
 let mySpin = 0.08;
 let keyShell = null;
 rebuild(params.spread);
@@ -271,9 +273,9 @@ addEventListener('resize', resize); resize();
 const clock = new THREE.Clock();
 function tick() {
   try {
-    const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
+    const dt = Math.min(clock.getDelta(), 0.05), t = params.reduced ? 0 : clock.elapsedTime;
     controls.update(dt);
-    world.rotation.y += dt * mySpin;
+    if (!params.reduced) world.rotation.y += dt * mySpin;
     world.scale.setScalar(1 + 0.03 * Math.sin(t * 0.5));
 
     // light wave: from grid (assigned stations) or by the lit-count slider
@@ -317,7 +319,7 @@ function tick() {
     }
 
     star.group.visible = params.star;
-    star.update(1, t, false, dt, false);
+    star.update(1, t, params.reduced, dt, false);
     renderer.render(scene, camera);
     requestAnimationFrame(tick);
   } catch (err) { window.__gerr && window.__gerr('loop: ' + (err && err.stack || err)); throw err; }

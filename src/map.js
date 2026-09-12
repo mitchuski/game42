@@ -190,17 +190,17 @@ function buildLegend(game) {
     <div class="sec"><h2>${game.glyph || '◆'} ${esc(game.name)}</h2>
       <p style="color:var(--dim);margin:0">${esc(game.tagline)} — the same 42, in this game's voice.</p></div>
     <div class="sec"><h2>two graphs become a third</h2>${phase(Object.keys(GRAPH).map((k) => `${k} &middot; <b>${GRAPH[k]}</b>`))}
-      <p class="prov">empty board = knowledge graph; the 42 VRC edges = promise graph; the sealed game = trust graph.</p></div>
+      <p class="prov">The board models a possible assembly. Practice steps and imported claims do not establish verified relationships.</p></div>
     <div class="sec"><h2>each heptad, six phases</h2>${phase(['dormant', 'ignited', 'fishing', 'building', 'sealing', 'locked'])}
       <p class="prov">ignite the root → 3 head stations open → a verified lead opens 3 builders → all six verified opens the keystone → seven sealed locks the heptad.</p></div>
     <div class="sec"><h2>the seven stations, in fill order</h2>
       <table><thead><tr><th>#</th><th>faculty</th><th>class</th><th>role</th><th>faculty &middot; mirror</th><th>template</th></tr></thead><tbody>${rows}</tbody></table>
       <p class="prov">head/heart/hands is also soil/soul/society — the same corners, mirrored.</p></div>
     <div class="sec"><h2>filling a slot</h2><ol class="steps">
-      <li>a candidate completes a <b>trust task</b> with the root (RPP) — mints a proverb + polarity</li>
-      <li>a passed task issues one <b>VRC edge</b> for that slot</li>
+      <li>in a future connected task, candidate and reviewer agree scope and evidence</li>
+      <li>this practice board uses synthetic task records</li>
       <li>compressed to a <b>κ-label</b> = SHA-256 of its canonical form</li>
-      <li>advances to <b>verified</b>, then <b>sealed</b></li></ol></div>
+      <li>advances through simulated checks, then completes the practice station</li></ol></div>
     <div class="sec"><h2>the seal</h2><p style="color:var(--dim)">all six heptads lock → the board folds (p→1). <b style="color:var(--ink)">group seal</b> = SHA-256 over the 42 κ-labels + the folded geometry hash. boundary encodes bulk.</p></div>
     <div class="sec"><h2>the six roots</h2><div class="roots">${roots}</div></div>
   `;
@@ -512,7 +512,7 @@ const INTRO = [
   { k: 'six roots', t: 'The six axes', b: 'compute · connection · delegation · protection · memory · value — the six dimensions of the privacy value model. Each is a heptad you grow out from its mage.' },
   { k: 'seven stations', t: 'three shapes per heptad', b: 'Each heptad of seven has three who scout, three who build, and one keystone who closes it and holds the seed. The shapes are fixed; who fills them is open.' },
   { k: 'who fills it', t: 'an agent, a person, or you', b: 'Every station is a trust task: you seat an actor and hold what matters against it — an AI agent, another person, or yourself. The City of Mages is just the first such game.' },
-  { k: 'fill & fold', t: 'Trust → seal', b: 'Each slot fills by a trust task → a relationship credential → a κ. When all six heptads lock, the board folds into your star and seals into one shareable key.' },
+  { k: 'fill & fold', t: 'Practice → assembly', b: 'Practise the lifecycle of a task. Filling the six heptads folds the board into a Star. A practice digest identifies content; real trust needs separately verified evidence.' },
 ];
 const introWrap = document.getElementById('intro');
 const introCard = document.getElementById('introCard');
@@ -612,5 +612,5 @@ try {
   const q = new URLSearchParams(location.search);
   if (q.has('start')) { try { localStorage.setItem('game42.intro.seen', '1'); } catch (e) {} }
   else if (q.has('join')) openIntroAt(renderJoin);
-  else if (!localStorage.getItem('game42.intro.seen')) showIntro();
+  // The task journey is the first entry; the legacy intro remains available by link.
 } catch (e) {}

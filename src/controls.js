@@ -4,6 +4,18 @@ export function createControls(canvas, camera, params, onTap) {
   const minD = params.minDist || 3.2, maxD = params.maxDist || 15;
   let az = 0.0, pol = 1.02, azV = 0, polV = 0, dist = params.startDist || 6.6;
   let dragging = false, px = 0, py = 0, downX = 0, downY = 0, downT = 0;
+  canvas.tabIndex = 0;
+  canvas.setAttribute('aria-label', 'Assembly view. Arrow keys orbit; plus and minus zoom. The Map provides a text and two-dimensional view.');
+  canvas.addEventListener('keydown', e => {
+    const keys=['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','+','=','-'];
+    if(!keys.includes(e.key))return;
+    e.preventDefault(); e.stopPropagation();
+    if(e.key==='ArrowLeft')az-=0.12;if(e.key==='ArrowRight')az+=0.12;
+    if(e.key==='ArrowUp')pol-=0.12;if(e.key==='ArrowDown')pol+=0.12;
+    pol=Math.max(0.15,Math.min(Math.PI-0.15,pol));
+    if(e.key==='+'||e.key==='=')dist=Math.max(minD,dist-0.3);
+    if(e.key==='-')dist=Math.min(maxD,dist+0.3);
+  });
 
   canvas.addEventListener('pointerdown', (e) => {
     dragging = true; px = e.clientX; py = e.clientY;
@@ -27,7 +39,8 @@ export function createControls(canvas, camera, params, onTap) {
 
   let focusT = 0;
   function update(dt) {
-    if (params.focus && !dragging) {
+    if (params.reduced) { azV = 0; polV = 0; }
+    else if (params.focus && !dragging) {
       // [f] focus mode — presentation orbit: steady spin + a slow polar sway (the breath)
       focusT += dt;
       az += dt * 0.22;

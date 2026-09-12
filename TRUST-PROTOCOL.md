@@ -1,5 +1,9 @@
 # TRUST-PROTOCOL
 
+**Current implementation boundary — September 2026:** the game runs local practice tasks and synthetic assembly events. The VRC issuance described below is the historical intended protocol. For the new extension connection, follow [Game → Star Hold → Hearthold](HEARTHOLD-ENCOUNTER.md): selected contribution, explicit signing, receiver-enforced consent, durable receipt and private Hold retention. Those integrations are not yet live in this game.
+
+A contributor assertion, reviewer acceptance and service receipt are separate signed records. A City Key fingerprint checks content; signature verification, identity binding, authorization and persistence each need their own evidence. Do not turn synthetic slot completion into a VRC or reuse the game hash exclusions for City Key or credential verification.
+
 ## VRC, trust task, compression, seals
 
 How a slot fills, how it compresses, how a game seals, how games compose. Schemas in `data/schemas.json`. Hashing reference in `data/canonical_serialise.py`. Verifiers MUST match the reference or they will produce false negatives.

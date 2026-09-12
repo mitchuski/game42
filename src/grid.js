@@ -1,7 +1,6 @@
 // grid.js — the Grid: assemble many games of 42 + Keys into one trust-graph view.
 // Each loaded PNG/JSON becomes a sigil of its κ (the soulbis /sigil idea: a hash
-// rendered as a 64-glyph mandala). Threads link games that share κ-prefix (common
-// ground) or lineage (prior). A κ-encoder derives content addresses on demand.
+// rendered as a 64-glyph mandala). Threads show declared lineage references (prior), without asserting verified relationships. A κ-encoder derives content addresses on demand.
 import { pngExtract, pngEmbed } from './pngkey.js';
 import { canonical, sha256hex } from './hash.js';
 import { SLOTS, SLOTS_BY_AXIS, AXIS_ORDER, AXIS_BY_ID } from './data.js';
@@ -300,14 +299,7 @@ function drawLinks() {
   svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
   let s = '';
   const center = (it) => it._el ? [it._el.offsetLeft + it._el.offsetWidth / 2, it._el.offsetTop + it._el.offsetHeight / 2] : null;
-  for (let i = 0; i < items.length; i++) {
-    for (let j = i + 1; j < items.length; j++) {
-      const A = items[i], B = items[j], a = center(A), b = center(B);
-      if (!a || !b || !A.kappaRaw || !B.kappaRaw) continue;
-      let pre = 0; while (pre < 64 && A.kappaRaw[pre] === B.kappaRaw[pre]) pre++;
-      if (pre >= 4) s += line(a, b, '#38bdf8', Math.min(0.5, 0.12 + pre * 0.05));
-    }
-  }
+  // Hash prefixes do not establish common ground. Only explicit prior references are drawn.
   // lineage: a game whose prior == another's κ
   for (const A of items) {
     if (!A.prior) continue;
